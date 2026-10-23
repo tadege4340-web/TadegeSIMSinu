@@ -1,0 +1,261 @@
+/* ============================================================
+   INJIBARA UNIVERSITY SIM — STYLESHEET (mycours.css)
+   ============================================================ */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background-color: #f8fafc;
+    color: #1e293b;
+}
+
+/* App Layout: Sidebar + Main Content Side-by-Side */
+.app-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Sidebar Styles */
+.sidebar {
+    width: 260px;
+    background-color: #ffffff;
+    border-right: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+.sidebar-brand {
+    padding: 20px;
+    background-color: #e0f2fe;
+    color: #0369a1;
+    text-align: center;
+    font-weight: bold;
+    border-bottom: 1px solid #bae6fd;
+}
+
+.nav-links {
+    list-style: none;
+    padding: 15px 10px;
+}
+
+.nav-links li {
+    margin-bottom: 5px;
+}
+
+.nav-links a {
+    display: block;
+    padding: 12px 15px;
+    color: #334155;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.nav-links a:hover, 
+.nav-links a.active {
+    background-color: #e2e8f0;
+    color: #0f172a;
+}
+
+/* Main Content Area */
+.main-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+}
+
+/* Top Header Bar */
+.top-header {
+    background-color: #ffffff;
+    padding: 15px 30px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 20px;
+}
+
+.welcome-text {
+    font-size: 15px;
+    font-weight: 600;
+    color: #334155;
+}
+
+.logout-btn {
+    background-color: #dc2626;
+    color: #ffffff;
+    padding: 8px 16px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.logout-btn:hover {
+    background-color: #b91c1c;
+}
+
+/* Course Container & Table */
+.course-container {
+    padding: 30px;
+    max-width: 100%;
+}
+
+.course-container h1 {
+    font-size: 24px;
+    margin-bottom: 15px;
+    color: #0f172a;
+}
+
+.info-note {
+    background-color: #eff6ff;
+    border-left: 4px solid #3b82f6;
+    padding: 12px 15px;
+    border-radius: 4px;
+    font-size: 14px;
+    margin-bottom: 20px;
+    color: #1e40af;
+}
+
+.table-wrapper {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    overflow-x: auto;
+}
+
+.course-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 14px;
+}
+
+.course-table th, 
+.course-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.course-table th {
+    background-color: #f8fafc;
+    color: #475569;
+    font-weight: 600;
+}
+
+.course-table tr:hover {
+    background-color: #f8fafc;
+}
+
+.no-data {
+    text-align: center;
+    color: #64748b;
+    padding: 20px;
+}
+
+/* ============================================================
+   RESPONSIVE MEDIA QUERIES FOR MOBILE DEVICES (<= 768px)
+   ============================================================ */
+@media screen and (max-width: 768px) {
+    .app-layout {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .nav-links {
+        display: flex;
+        overflow-x: auto;
+        padding: 10px;
+        gap: 5px;
+    }
+
+    .nav-links li {
+        margin-bottom: 0;
+        flex-shrink: 0;
+    }
+
+    .nav-links a {
+        padding: 8px 12px;
+        white-space: nowrap;
+    }
+
+    .top-header {
+        padding: 10px 15px;
+        justify-content: space-between;
+    }
+
+    .course-container {
+        padding: 15px;
+    }
+
+    /* Transform Table into Stacked Cards on Small Screens */
+    .course-table, 
+    .course-table thead, 
+    .course-table tbody, 
+    .course-table th, 
+    .course-table td, 
+    .course-table tr {
+        display: block;
+    }
+
+    .course-table thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+
+    .course-table tbody tr {
+        background-color: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        padding: 10px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .course-table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 5px;
+        border-bottom: 1px dashed #e2e8f0;
+        text-align: right;
+    }
+
+    .course-table td:last-child {
+        border-bottom: none;
+    }
+
+    .course-table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #64748b;
+        text-align: left;
+        padding-right: 15px;
+    }
+
+    .course-table td.no-data {
+        display: block;
+        text-align: center;
+    }
+
+    .course-table td.no-data::before {
+        content: "";
+    }
+}

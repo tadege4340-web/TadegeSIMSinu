@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>Student Grade Checker</h1>
+
+    <script>
+        document.write("Grade of student<br>");
+
+        let mid = Number(prompt("Enter the score of mid (20%)"));
+        let assignment = Number(prompt("Enter the score of assignment (15%)"));
+        let project = Number(prompt("Enter the score of project (15%)"));
+        let final = Number(prompt("Enter the score of final (50%)"));
+
+        let total = mid + assignment + project + final;
+
+        if (total >= 90 && total <= 100) {
+            document.write("A+");
+        } else if (total >= 80 && total <= 89) {
+            document.write("A");
+        } else if (total <= 40 && total >= 0) {
+            document.write("F");
+        } else {
+            document.write("Invalid");
+        }
+    </script>
+</body>
+</html>
+

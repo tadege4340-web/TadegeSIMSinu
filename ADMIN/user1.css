@@ -1,0 +1,306 @@
+/* =====================================================
+   INJIBARA UNIVERSITY - STUDENT PORTAL DASHBOARD
+   ===================================================== */
+
+/* ---------- UNIVERSAL RESET ---------- */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: "Times New Roman", serif;
+    background: #eaf4fb;
+    color: #243447;
+}
+
+/* ---------- FIXED HEADER ---------- */
+.first {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    min-height: 100px;
+    padding: 10px 20px;
+    background: linear-gradient(120deg, #dff6ff, #a9e4f5, #d9f3ff);
+    border-bottom: 3px solid #087fa5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Puts logo on left, title in center, empty space on right */
+    z-index: 1001;
+    box-shadow: 0 4px 15px rgba(8, 47, 85, 0.12);
+}
+
+.second {
+    flex: 0 0 auto; /* Keeps logo from shrinking */
+}
+
+.second img {
+    display: block;
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    border-radius: 50%;
+}
+
+.third {
+    flex: 1; /* Takes up all remaining space */
+    text-align: center; /* Centers the text */
+    padding: 0 15px;
+}
+
+.third h1 {
+    margin: 0;
+    color: #082f55;
+    font-size: clamp(16px, 2vw, 28px);
+    font-weight: bold;
+    line-height: 1.2;
+}
+
+/* ---------- LOGOUT BAR ---------- */
+.fivth {
+    position: fixed;
+    top: 100px;
+    left: 0;
+    width: 100%;
+    height: 55px;
+    padding: 8px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end; /* Pushes Logout to the far right */
+    background: #1e3a8a;
+    border-bottom: 2px solid #bdd7e8;
+    z-index: 1000;
+}
+
+.logout-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 24px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: bold;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: background 0.2s ease;
+}
+
+.logout-btn:hover {
+    background: #dc2626;
+    border-color: #dc2626;
+}
+
+/* ---------- MAIN CONTAINER & SIDEBAR ---------- */
+.main-container {
+    display: flex;
+    margin-top: 155px;
+    min-height: calc(100vh - 155px);
+}
+
+.add {
+    width: 250px;
+    flex-shrink: 0;
+    padding: 20px 15px;
+    background: linear-gradient(180deg, #d9eafa, #c4e0f5);
+    border-right: 3px solid #0b5b88;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.add .btn {
+    display: block;
+    width: 100%;
+    padding: 12px 10px;
+    background: #fff;
+    color: #084c78;
+    text-align: center;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: bold;
+    border: 1px solid #c5d9e8;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.add .btn:hover {
+    background: #087fa5;
+    color: #fff;
+}
+
+/* ---------- CONTENT AREA ---------- */
+.content-area {
+    flex: 1;
+    padding: 25px;
+    background: #fff;
+    min-width: 0; 
+    overflow-x: auto;
+}
+
+.welcome-msg {
+    background: linear-gradient(90deg, #e2f3ff, #f2faff);
+    border-left: 5px solid #087fa5;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 6px;
+    color: #084c78;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: right; /* Welcome message on the right */
+}
+
+/* ---------- TABLES & SCROLLABLE WRAPPER ---------- */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch; /* Smooth swipe on mobile */
+    margin-top: 15px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    border: 1px solid #d5e2ec;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    min-width: 850px; /* Forces table wide enough to swipe */
+}
+
+th, td {
+    padding: 12px 10px;
+    border: 1px solid #d5e2ec;
+    text-align: center;
+    vertical-align: middle;
+}
+
+th {
+    background: #087fa5;
+    color: #fff;
+    white-space: nowrap;
+}
+
+tbody tr:nth-child(even) {
+    background: #f0f7fc;
+}
+
+/* ---------- EXTRA UTILITY CLASSES ---------- */
+.info-note {
+    background: #e0f2fe;
+    border-left: 4px solid #3b82f6;
+    padding: 12px;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #1e3a8a;
+    margin-bottom: 15px;
+}
+
+.grade-pending {
+    color: #d97706;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.grade-empty {
+    color: #6b7280;
+    font-weight: bold;
+}
+
+/* =====================================================
+   RESPONSIVE MEDIA QUERIES (Tablets & Mobiles)
+   ===================================================== */
+@media (max-width: 900px) {
+    .first {
+        min-height: 80px;
+        padding: 10px 15px;
+    }
+
+    .second img {
+        width: 60px;
+        height: 60px;
+    }
+
+    .third h1 {
+        font-size: 15px;
+    }
+
+    .fivth {
+        top: 80px;
+        height: 50px;
+        padding: 8px 15px;
+    }
+
+    .main-container {
+        margin-top: 130px;
+        flex-direction: column;
+    }
+
+    /* Sidebar becomes a grid of buttons */
+    .add {
+        width: 100%;
+        border-right: none;
+        border-bottom: 3px solid #0b5b88;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .add .btn {
+        flex: 1 1 45%;
+        font-size: 14px;
+        padding: 10px 5px;
+    }
+
+    .content-area {
+        padding: 15px;
+    }
+}
+
+@media (max-width: 500px) {
+    .first {
+        min-height: 90px;
+        padding: 10px;
+    }
+
+    .second img {
+        width: 50px;
+        height: 50px;
+    }
+
+    .third h1 {
+        font-size: 11px; /* Smaller text so it fits nicely next to logo */
+        line-height: 1.2;
+    }
+
+    .fivth {
+        top: 90px;
+        padding: 5px 10px;
+    }
+
+    .logout-btn {
+        padding: 6px 16px;
+        font-size: 13px;
+    }
+
+    .main-container {
+        margin-top: 140px;
+    }
+
+    .add .btn {
+        flex: 1 1 100%; /* 1 button per row on small phones */
+    }
+
+    .welcome-msg {
+        font-size: 14px;
+        text-align: right; 
+    }
+}

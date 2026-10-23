@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Form</title>
+</head>
+<body>
+    <form action="#" method="post">
+        <fieldset>
+            <legend>Registration Form</legend>
+
+            <label>First Name:</label>
+            <input type="text" name="fname"><br><br>
+
+            <label>Last Name:</label>
+            <input type="text" name="lname"><br><br>
+
+            <label>Email:</label>
+            <input type="email" name="email">
+            <small>(Your email address will be your username)</small><br><br>
+
+            <label>Re-type Email:</label>
+            <input type="email" name="reemail"><br><br>
+
+            <label>Password:</label>
+            <input type="password" name="password">
+            <small>(Min. 8 characters, 1 number, case-sensitive)</small><br><br>
+
+            <label>Re-type Password:</label>
+            <input type="password" name="repassword"><br><br>
+
+            <label>Address:</label>
+            <input type="text" name="address"><br><br>
+
+            <label>City:</label>
+            <input type="text" name="city"><br><br>
+
+            <label>State:</label>
+            <select name="state">
+                <option>Choose a state</option>
+                <option>California</option>
+                <option>Texas</option>
+                <option>New York</option>
+                <option>Florida</option>
+            </select><br><br>
+
+            <label>Zip Code:</label>
+            <input type="text" name="zip">
+            <small>(Optional)</small><br><br>
+
+            <label>Phone:</label>
+            <input type="text" name="phone">
+           
+            <select name="phonetype">
+                <option>Mobile</option>
+                <option>Home</option>
+                <option>Work</option>
+            </select>
+             <div>No spaces or dashes</div><br><br>
+
+            <label>Date of Birth:</label>
+            <select name="month">
+                <option>Month</option>
+                <option>Jan</option>
+                <option>Feb</option>
+                <option>Mar</option>
+            </select>
+            <select name="day">
+                <option>Day</option>
+                <option>1</option>
+                <option>2</option>
+                <option>3</option>
+            </select>
+            <select name="year">
+                <option>Year</option>
+                <option>2000</option>
+                <option>2001</option>
+                <option>2002</option>
+            </select><br><br>
+
+            <label>Gender:</label>
+            <select name="gender">
+                <option>Choose a gender</option>
+                <option>Male</option>
+                <option>Female</option>
+                <option>Other</option>
+            </select><br><br>
+
+            <label>Security Question:</label>
+            <select name="security_question">
+                <option>Choose a security question</option>
+                <option>What is your pet's name?</option>
+                <option>What is your mother’s maiden name?</option>
+                <option>What was your first school?</option>
+            </select><br><br>
+
+            <label>Security Answer:</label>
+            <input type="text" name="security_answer">
+            <small>(Not case-sensitive)</small><br><br>
+
+            <input type="submit" value="Register">
+            <input type="reset" value="Clear">
+              <input list="first">
+            <datalist id="first">
+                <option value="hgj">gf</option>
+                 <option value="hgj">gf</option>
+                  <option value="hgj">gf</option>
+            </datalist>
+        </fieldset>
+    </form>
+</body>
+</html>

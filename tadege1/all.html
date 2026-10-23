@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Students</title>
+    <link rel="stylesheet" href="css.css">
+</head>
+<body>
+
+<div class="addt">
+    <h2>Add / Update Student</h2>
+
+    <form id="studentForm">
+        <label>First Name</label>
+        <input type="text" id="firstname" required><br>
+
+        <label>Last Name</label>
+        <input type="text" id="lastname" required><br>
+
+        <label>Age</label>
+        <input type="number" id="age" required><br>
+
+        <label>ID</label>
+        <input type="text" id="studentid" required><br>
+
+        <label>Gender:</label><br>
+        <input type="radio" name="gender" value="Male" required> MALE <br>
+        <input type="radio" name="gender" value="Female" required> FEMALE <br>
+
+        <label>Email</label>
+        <input type="email" id="email"><br>
+
+        <label>Phone No</label>
+        <input type="tel" id="phone" maxlength="10"><br>
+
+        <label>Department</label>
+        <select id="department">
+            <option value="CS">Computer Science</option>
+            <option value="ECE">Electrical & Computer Eng.</option>
+            <option value="SE">Software Engineering</option>
+            <option value="IS">Information Systems</option>
+            <option value="IT">Information Technology</option>
+            <option value="CE">Civil Engineering</option>
+            <option value="ECON">Economics</option>
+            <option value="ACC">Accounting</option>
+            <option value="MGT">Management</option>
+        </select><br><br>
+
+        <label>Year</label>
+        <input type="number" id="year" min="1" max="7" required><br><br>
+
+        <input type="button" id="submitBtn" value="ADD STUDENT" onclick="addOrUpdateStudent()">
+    </form>
+
+    <h2>Student List</h2>
+    <table border="1" id="studentTable">
+        <thead>
+            <tr>
+                <th>ID</th><th>First Name</th><th>Last Name</th><th>Age</th><th>Gender</th><th>Email</th><th>Phone</th><th>Department</th><th>Year</th><th>Actions</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<script>
+let editingIndex = -1; // Tracks which student is being edited
+
+// Load students from localStorage on page load
+let students = JSON.parse(localStorage.getItem("students")) || [];
+renderTable();
+
+function addOrUpdateStudent() {
+    let student = {
+        firstname: document.getElementById("firstname").value,
+        lastname:  document.getElementById("lastname").value,
+        age:       document.getElementById("age").value,
+        id:        document.getElementById("studentid").value,
+        gender:    document.querySelector("input[name='gender']:checked").value,
+        email:     document.getElementById("email").value,
+        phone:     document.getElementById("phone").value,
+        department: document.getElementById("department").value,
+        year:      document.getElementById("year").value
+    };
+
+    if(editingIndex === -1) {
+        // Add new student
+        students.push(student);
+        alert("Student added successfully!");
+    } else {
+        // Update existing student
+        students[editingIndex] = student;
+        alert("Student updated successfully!");
+        editingIndex = -1;
+        document.getElementById("submitBtn").value = "ADD STUDENT";
+    }
+
+    localStorage.setItem("students", JSON.stringify(students));
+    renderTable();
+    document.getElementById("studentForm").reset();
+}
+
+// Render table of students
+function renderTable() {
+    let tbody = document.getElementById("studentTable").getElementsByTagName("tbody")[0];
+    tbody.innerHTML = "";
+
+    students.forEach((student, index) => {
+        let row = tbody.insertRow();
+        row.insertCell(0).innerText = student.id;
+        row.insertCell(1).innerText = student.firstname;
+        row.insertCell(2).innerText = student.lastname;
+        row.insertCell(3).innerText = student.age;
+        row.insertCell(4).innerText = student.gender;
+        row.insertCell(5).innerText = student.email;
+        row.insertCell(6).innerText = student.phone;
+        row.insertCell(7).innerText = student.department;
+        row.insertCell(8).innerText = student.year;
+        row.insertCell(9).innerHTML = `<button onclick="editStudent(${index})">Edit</button> <button onclick="deleteStudent(${index})">Delete</button>`;
+    });
+}
+
+// Edit student
+function editStudent(index) {
+    let student = students[index];
+    document.getElementById("firstname").value = student.firstname;
+    document.getElementById("lastname").value  = student.lastname;
+    document.getElementById("age").value       = student.age;
+    document.getElementById("studentid").value = student.id;
+    document.querySelector(`input[name='gender'][value='${student.gender}']`).checked = true;
+    document.getElementById("email").value     = student.email;
+    document.getElementById("phone").value     = student.phone;
+    document.getElementById("department").value= student.department;
+    document.getElementById("year").value      = student.year;
+
+    editingIndex = index;
+    document.getElementById("submitBtn").value = "UPDATE STUDENT";
+}
+
+// Delete student
+function deleteStudent(index) {
+    if(confirm("Are you sure you want to delete this student?")) {
+        students.splice(index, 1);
+        localStorage.setItem("students", JSON.stringify(students));
+        renderTable();
+    }
+}
+</script>
+
+</body>
+</html>

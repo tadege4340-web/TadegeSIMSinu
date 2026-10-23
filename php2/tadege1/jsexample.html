@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+
+<form id="myForm">
+  <input type="text" id="name1" placeholder="Enter your name">
+  <button type="submit">Submit</button>
+</form>
+
+<p id="result">sum</p>
+
+<form id="tadege">
+  <label>Name</label>
+  <input type="text" id="name2">
+
+  <label>Password</label>
+  <input type="password" id="password">
+</form>
+
+<p id="demo">A PARAGRAPH</p>
+
+<script>
+  let ta=prompt("enter the first na me");
+  document.write("thenameis :   " +  ta)
+document.getElementById("myForm").onsubmit = function() {
+  let name = document.getElementById("name1").value;
+
+  if (name == "") {
+    alert("Name is required!");
+    return false;
+  }
+};
+
+// sum
+var x = 20;
+var y = 10;
+var sum = x + y;
+document.getElementById("result").innerHTML = "sum is = " + sum;
+
+// functions
+function changeName() {
+  document.getElementById("name2").value = "halll";
+}
+
+function changePara() {
+  document.getElementById("demo").innerHTML = "Paragraph changed";
+}
+
+// area
+let height = 6;
+let width = 6;
+let area = width * height;
+document.write(area);
+</script>
+
+</body>
+</html>

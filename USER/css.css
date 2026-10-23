@@ -1,0 +1,348 @@
+
+body {
+    margin: 30px;
+    padding-top: 150px; 
+    font-family: 'Times New Roman', serif;
+}
+
+.first {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: aqua;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    z-index: 1000;
+}
+
+.fivth {
+    position: fixed;
+    top: 120px;
+    left: 0;
+    width: 100%;
+    background-color: lightgray;
+    padding: 15px;
+    text-align: center;
+    z-index: 999;
+}
+
+.second img {
+    margin-left: 20px;
+    border-radius: 50px;
+}
+
+.third {
+    flex: 1;
+    text-align: center;
+}
+
+.third h1 {
+    font-size: 32px;
+    font-weight: bold;
+    line-height: 1.3;
+}
+
+.fourth {
+    margin-right: 40px;
+}
+
+.fourth a {
+    text-decoration: none;
+    font-weight: bold;
+    background-color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    color: black;
+    border: 2px solid #008B8B;
+}
+
+
+
+
+.fivth {
+    position: fixed;
+    top: 120px;
+    left: 0;
+    width: 100%;
+    background-color: lightgray;
+    padding: 15px;
+    text-align: center;
+  
+}
+
+.fivth a{
+    text-decoration: none;
+position: relative;
+ margin-right: 50px; }
+
+
+
+
+
+  
+
+
+
+
+
+.start {
+    position: relative; 
+    text-align:left; 
+    padding: 0; 
+    display: block; 
+   
+
+   
+}
+
+
+.go {
+    position:relative; 
+    display: inline-block;
+    vertical-align: top; 
+   
+}
+
+
+.go > a {
+   
+    background-color: white; 
+    text-decoration: none;
+    display: block; 
+    font-weight: bold;
+   
+}
+
+
+.stop {
+    display: none;
+    background-color: white; 
+    position: absolute; 
+    border: 1px solid #ccc;
+    min-width: 280px; 
+    z-index: 1000; 
+    left: 0; 
+    top: 100%; 
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+}
+
+
+.go:hover > .stop {
+    display: block;
+}
+
+
+.sub-go { 
+    position: relative; 
+    display: block;    
+}
+
+
+.sub-stop, .courses-stop, .types-stop { 
+    display: none;
+    position: absolute; 
+    background-color: white; 
+    border: 1px solid #ccc;
+    min-width: 250px;
+    z-index: 1001; 
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+  
+    left: 100%; 
+    top: 0; 
+}
+
+/* Level 2 Rule: Hover a College (.sub-go within .stop) to show Departments (.sub-stop) */
+.stop > .sub-go:hover > .sub-stop { 
+    display: block; 
+}
+
+/* Level 3 Rule: Hover a Department (.sub-go within .sub-stop) to show COURSES link (.courses-stop) */
+.sub-stop > .sub-go:hover > .courses-stop { 
+    display: block; 
+}
+
+/* Level 4 Rule: Hover the COURSES link container (.courses-stop) to show the actual courses (.types-stop) */
+.courses-stop:hover > .types-stop { 
+    display: block; 
+}
+ 
+/* Styling for all dropdown links */
+.stop a, 
+.sub-stop a, 
+.courses-stop a, 
+.types-stop a {
+    background-color: white; 
+    padding: 8px 20px;
+    text-decoration: none;
+    display: block; 
+    white-space: nowrap; 
+    color: #333; /* Default link color */
+}
+
+/* Hover effect for all dropdown links */
+.stop a:hover, 
+.sub-stop a:hover, 
+.courses-stop a:hover, 
+.types-stop a:hover {
+    background-color: #f0f0f0; /* Light grey hover background */
+    color: #007bff; /* Blue hover text */
+}
+
+/* Adds a right arrow (») to links that have sub-menus */
+.sub-go > a::after {
+    content: ' »'; 
+    float: right;
+    margin-left: 5px;
+    color: #666; 
+}
+/* The final list of courses doesn't need an arrow */
+.types-stop a::after {
+    content: none;
+}
+
+/* Styling for non-clickable label links (like DEPARTMENTS/COURSES headings) */
+.menu-label {
+    display: block;
+    padding: 8px 20px;
+    font-weight: bold; /* Make the label stand out */
+    background-color: #f8f8f8; /* Slightly different background for labels */
+    border-bottom: 1px solid #eee;
+    cursor: default; 
+    white-space: nowrap;
+    pointer-events: none; /* Prevents it from being clickable */
+}
+
+.menu-label:hover {
+    background-color: #f8f8f8; 
+}
+
+
+
+.section1{
+    text-indent: 30px;
+    display: flex;
+}
+.logout{
+  text-align:right;
+}
+
+.logout input[type="submit"]{
+  
+    margin-top: 350px;
+}
+
+
+
+
+.addt {
+    background: #ffffff;
+    max-width: 520px;
+    margin: 45px auto;
+    padding: 35px 40px 45px;
+    border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12),
+                0 2px 6px rgba(0, 0, 0, 0.06);
+    border-top: 5px solid #00c9c9;
+}
+
+.addt h2 {
+    text-align: center;
+    font-size: 26px;
+    font-weight: 800;
+    color: #001f3f;
+    margin-bottom: 15px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #e5e7eb;
+    letter-spacing: 0.5px;
+}
+
+.addt form label {
+    display: block;
+    margin-top: 16px;
+    margin-bottom: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    color: #001f3f;
+}
+
+.addt form input[type="text"],
+.addt form input[type="number"],
+.addt form input[type="email"],
+.addt form input[type="tel"],
+.addt form select {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 15px;
+    background: #f9fafb;
+    color: #1f2937;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.addt form input:focus,
+.addt form select:focus {
+    outline: none;
+    border-color: #00b3b3;
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(0, 179, 179, 0.18);
+}
+
+.addt form input[type="radio"] {
+    margin-right: 6px;
+    margin-left: 4px;
+    accent-color: #00b3b3;
+    transform: scale(1.15);
+    vertical-align: middle;
+    cursor: pointer;
+}
+
+.addt form input[type="submit"] {
+    display: block;
+    width: 100%;
+    margin-top: 28px;
+    padding: 14px;
+    background: linear-gradient(90deg, #001f3f 0%, #00377a 100%);
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 31, 63, 0.25);
+    transition: transform 0.15s, box-shadow 0.2s, background 0.2s;
+}
+
+.addt form input[type="submit"]:hover {
+    background: linear-gradient(90deg, #00377a 0%, #0050b3 100%);
+    box-shadow: 0 6px 18px rgba(0, 31, 63, 0.35);
+}
+
+.addt form input[type="submit"]:active {
+    transform: scale(0.97);
+}
+
+.addt p {
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    font-weight: 600;
+    font-size: 14px;
+    text-align: center;
+}
+
+/* ===========================================================
+   RESPONSIVE
+   =========================================================== */
+@media (max-width: 640px) {
+    .first { flex-direction: column; gap: 12px; padding: 15px; }
+    .third h1 { font-size: 16px; }
+    .fivth { gap: 18px; flex-wrap: wrap; padding: 10px; }
+    .fivth a { font-size: 14px; }
+    .addt { margin: 25px 15px; padding: 25px 22px 30px; }
+    .addt h2 { font-size: 22px; }
+}

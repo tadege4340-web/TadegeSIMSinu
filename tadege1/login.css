@@ -1,0 +1,107 @@
+
+body {
+
+  background-color:aqua;
+}
+
+.header {
+  background-color: aqua;
+  color: black;
+  padding: 20px;
+  display: flex;        
+  align-items: center; 
+   margin-left: 40;    
+
+}
+
+ 
+  
+.header .logo img {
+  width: 123px;
+  height: auto;
+   border-radius: 50px;
+  
+}
+
+.title {
+  font-size: 15px;      
+  line-height: 1.2;
+ text-align: left;
+ margin-left: 100px;
+ text-align: center;
+
+}
+
+
+
+.menu {
+  background-color:lightgray;
+  text-align: center;
+  padding: 10px 0;
+}
+
+.menu a {
+  
+  text-decoration: none;
+  margin: 0 15px;
+  font-weight: bold;
+}
+
+.menu a:hover {
+  text-decoration: underline;
+}
+
+
+.content-area {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 70vh; 
+}
+
+
+.login-box {
+  background-color: white;
+  padding: 30px 40px;
+  border-radius: 10px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.2);
+  width: 300px;
+  text-align: center;
+}
+
+.login-box h2 {
+  margin-bottom: 20px;
+  color: #004080;
+}
+
+.login-box form label {
+  display: block;
+  margin: 10px 0 5px;
+  text-align: left;
+}
+
+.login-box form input[type="text"],
+.login-box form input[type="password"] {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.logout{
+  text-align: right;
+}
+.logout input[type="submit"] {
+  background-color:blue;
+
+
+  }
+.create1 .create2 {
+  color: green;
+}
+.create a{
+  text-decoration: none;
+}
+    
+  

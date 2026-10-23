@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+    <body>
+        <h1>simple Calculater</h1>
+        <form >
+           value 1:<input type="number" id="num1"><br>
+                      value 2:<input type="number" id="num2"><br>
+                      <button type="button" onclick="addnumber()">addition</button>
+                       <button type="button" onclick="subnumber()">substraction</button>
+                         <button type="button" onclick="mulnumber()">mulitiplication</button>
+                          <button type="button" onclick="divnumber()">Division</button>
+
+        </form>
+        <h3>addition result:<span id="result"></span></h3>
+        <h3>substraction result:<span id="sub"></span></h3>
+         <h3>mulitiplication result:<span id="mul"></span></h3>
+          <h3>Division result:<span id="div"></span></h3>
+
+        <script>
+            function addnumber(){
+                let a=parseFloat(document.getElementById('num1').value);
+                let b=parseFloat(document.getElementById('num2').value);
+                document.getElementById('result').innerText=a + b;
+
+
+            }
+            function subnumber (){
+                let c=parseFloat(document.getElementById('num1').value);
+                let d=parseFloat(document.getElementById('num2').value);
+                document.getElementById('sub').innerText=(c - d);
+
+
+            }
+
+
+              function mulnumber (){
+                let e=parseFloat(document.getElementById('num1').value);
+                let f=parseFloat(document.getElementById('num2').value);
+                document.getElementById('mul').innerText= e * f;
+
+
+            }
+            function divnumber(){
+                let a=parseFloat(document.getElementById('num1').value);
+                   let h=parseFloat(document.getElementById('num2').value);
+                   document.getElementById("div").innerText="" + (a/h) ;
+            }
+        </script>
+
+</body>
+</html>

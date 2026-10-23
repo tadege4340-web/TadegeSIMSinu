@@ -1,0 +1,532 @@
+/* =====================================================
+   MY ACADEMIC STATUS — PROFESSIONAL RESPONSIVE DESIGN
+   ===================================================== */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+.mystatus-container {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 20px;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #26364a;
+}
+
+/* HEADER */
+
+.mystatus-header {
+    width: 100%;
+    margin-bottom: 20px;
+    padding: 20px 24px;
+    background: #fff;
+    border-left: 5px solid #087fa3;
+    border-radius: 9px;
+    box-shadow: 0 3px 12px rgba(0, 45, 80, .08);
+}
+
+.mystatus-header h2 {
+    margin: 0;
+    color: #174a70;
+    font-size: 25px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+/* SEARCH */
+
+.mystatus-search {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.mystatus-search input {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    padding: 13px 15px;
+    border: 1px solid #ccd7e2;
+    border-radius: 7px;
+    background: #fff;
+    color: #26364a;
+    font-size: 16px;
+}
+
+.mystatus-search input:focus {
+    outline: 2px solid #b5e4f0;
+    border-color: #087fa3;
+}
+
+.mystatus-search button {
+    flex-shrink: 0;
+    padding: 12px 22px;
+    border: 0;
+    border-radius: 7px;
+    background: #087fa3;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.mystatus-search button:hover {
+    background: #066681;
+}
+
+/* TABLE WRAPPER
+   Horizontal scrolling keeps all columns accessible. */
+
+.mystatus-table-wrap {
+    display: block;
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    background: #fff;
+    border-radius: 9px;
+    box-shadow: 0 3px 14px rgba(0, 45, 80, .08);
+}
+
+/* TABLE */
+
+.mystatus-table {
+    width: 100%;
+    min-width: 1100px;
+    border-collapse: collapse;
+    table-layout: auto;
+    background: #fff;
+}
+
+.mystatus-table th {
+    padding: 16px 13px;
+    background: #0b819f;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: left;
+    white-space: nowrap;
+    border-right: 1px solid rgba(255,255,255,.3);
+    border-bottom: 3px solid #075d7b;
+}
+
+.mystatus-table th:last-child {
+    border-right: 0;
+}
+
+.mystatus-table td {
+    padding: 15px 13px;
+    color: #26364a;
+    font-size: 14px;
+    white-space: nowrap;
+    border-right: 1px solid #dce5ee;
+    border-bottom: 1px solid #e3eaf1;
+}
+
+.mystatus-table td:last-child {
+    border-right: 0;
+}
+
+.mystatus-table tbody tr:nth-child(even) {
+    background: #f3f8fc;
+}
+
+.mystatus-table tbody tr:hover {
+    background: #e7f4fa;
+}
+
+.mystatus-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.mystatus-table .left {
+    text-align: left;
+}
+
+.mystatus-table .center {
+    text-align: center;
+}
+
+/* GPA */
+
+.mystatus-table .sgpa-cell {
+    color: #1769aa;
+    font-weight: 700;
+}
+
+.mystatus-table .cgpa-cell {
+    color: #087f5b;
+    font-weight: 700;
+}
+
+/* PASS / FAIL */
+
+.status-pass,
+.status-fail,
+.status-none {
+    display: inline-block;
+    min-width: 58px;
+    padding: 6px 12px;
+    border-radius: 24px;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.status-pass {
+    color: #087443;
+    background: #d8f5e5;
+}
+
+.status-fail {
+    color: #b42318;
+    background: #fee4e2;
+}
+
+.status-none {
+    color: #64748b;
+    background: #e9eef5;
+}
+
+/* NO RECORDS */
+
+.mystatus-table .no-data {
+    padding: 28px 15px;
+    color: #64748b;
+    text-align: center;
+    white-space: normal;
+}
+
+/* FOOTER */
+
+.mystatus-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+    width: 100%;
+    min-width: 0;
+    margin-top: 20px;
+    padding: 16px 20px;
+    background: #fff;
+    border-radius: 8px;
+    color: #40536b;
+    font-size: 15px;
+}
+
+.mystatus-footer select {
+    max-width: 100%;
+    margin-left: 8px;
+    padding: 9px 12px;
+    border: 1px solid #cbd6e2;
+    border-radius: 7px;
+    background: #fff;
+    color: #26364a;
+    font-size: 14px;
+}
+
+/* =====================================================
+   LAPTOP
+   ===================================================== */
+
+@media screen and (max-width: 1024px) {
+    .mystatus-container {
+        padding: 15px;
+    }
+
+    .mystatus-header {
+        padding: 18px;
+    }
+
+    .mystatus-header h2 {
+        font-size: 23px;
+    }
+
+    .mystatus-table {
+        min-width: 1050px;
+    }
+}
+
+/* =====================================================
+   TABLET
+   ===================================================== */
+
+@media screen and (max-width: 768px) {
+    .mystatus-container {
+        padding: 10px;
+    }
+
+    .mystatus-header {
+        margin-bottom: 15px;
+        padding: 15px;
+    }
+
+    .mystatus-header h2 {
+        font-size: 21px;
+    }
+
+    .mystatus-table {
+        min-width: 1000px;
+    }
+
+    .mystatus-table th,
+    .mystatus-table td {
+        padding: 12px 10px;
+        font-size: 13px;
+    }
+
+    .mystatus-footer {
+        padding: 14px;
+    }
+}
+
+/* =====================================================
+   MOBILE — Optimized touch experience
+   ===================================================== */
+
+@media screen and (max-width: 600px) {
+
+    .mystatus-container {
+        padding: 8px;
+    }
+
+    /* Header */
+    .mystatus-header {
+        margin-bottom: 12px;
+        padding: 12px 14px;
+        border-left-width: 4px;
+        border-radius: 7px;
+    }
+
+    .mystatus-header h2 {
+        font-size: 17px;
+        line-height: 1.3;
+    }
+
+    /* Search — stack nicely, keep input tappable */
+    .mystatus-search {
+        gap: 8px;
+        margin-bottom: 14px;
+    }
+
+    .mystatus-search input {
+        padding: 12px 12px;
+        font-size: 16px;          /* prevents iOS zoom-on-focus */
+        border-radius: 8px;
+    }
+
+    .mystatus-search button {
+        padding: 12px 16px;
+        font-size: 14px;
+        border-radius: 8px;
+        min-width: 80px;
+    }
+
+    /* Table wrapper — visual scroll hint */
+    .mystatus-table-wrap {
+        position: relative;
+        border-radius: 8px;
+        background:
+            linear-gradient(to right, #fff 0%, #fff calc(100% - 24px), transparent 100%) right / 24px 100% no-repeat,
+            #fff;
+    }
+
+    /* Shrink the table min-width to a realistic mobile scroll */
+    .mystatus-table {
+        min-width: 720px;
+    }
+
+    .mystatus-table th,
+    .mystatus-table td {
+        padding: 10px 9px;
+        font-size: 12.5px;
+        white-space: nowrap;
+    }
+
+    .mystatus-table th {
+        font-size: 12px;
+    }
+
+    /* Make the first column sticky for context while swiping */
+    .mystatus-table th:first-child,
+    .mystatus-table td:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 1;
+        background: #fff;
+        box-shadow: 2px 0 4px rgba(0, 45, 80, .08);
+    }
+
+    .mystatus-table th:first-child {
+        background: #0b819f;
+        z-index: 3;
+    }
+
+    .mystatus-table tbody tr:nth-child(even) td:first-child {
+        background: #f3f8fc;
+    }
+
+    .mystatus-table tbody tr:hover td:first-child {
+        background: #e7f4fa;
+    }
+
+    /* Status pills — slightly smaller */
+    .status-pass,
+    .status-fail,
+    .status-none {
+        min-width: 50px;
+        padding: 5px 10px;
+        font-size: 11px;
+    }
+
+    /* Footer */
+    .mystatus-footer {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        padding: 12px;
+        font-size: 13px;
+    }
+
+    .mystatus-footer select {
+        width: 100%;
+        margin: 6px 0 0 0;
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+}
+
+/* =====================================================
+   EXTRA SMALL PHONES
+   ===================================================== */
+
+@media screen and (max-width: 360px) {
+
+    .mystatus-container {
+        padding: 5px;
+    }
+
+    .mystatus-header h2 {
+        font-size: 15.5px;
+    }
+
+    .mystatus-search {
+        flex-wrap: wrap;          /* button drops below input if needed */
+    }
+
+    .mystatus-search button {
+        width: 100%;
+    }
+
+    .mystatus-table {
+        min-width: 680px;
+    }
+
+    .mystatus-table th,
+    .mystatus-table td {
+        padding: 8px 7px;
+        font-size: 11.5px;
+    }
+
+    .mystatus-footer {
+        padding: 10px;
+        font-size: 12px;
+    }
+}
+
+/* =====================================================
+   TRUE MOBILE CARD LAYOUT — no horizontal scroll
+   ===================================================== */
+
+@media screen and (max-width: 480px) {
+
+    .mystatus-table,
+    .mystatus-table thead,
+    .mystatus-table tbody,
+    .mystatus-table th,
+    .mystatus-table td,
+    .mystatus-table tr {
+        display: block;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .mystatus-table thead {
+        display: none;
+    }
+
+    .mystatus-table tr {
+        margin-bottom: 12px;
+        border: 1px solid #dce5ee;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #fff;
+        box-shadow: 0 2px 6px rgba(0, 45, 80, .05);
+    }
+
+    .mystatus-table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 9px 12px;
+        border: 0;
+        border-bottom: 1px solid #eef3f8;
+        white-space: normal;
+        text-align: right;
+        font-size: 13px;
+    }
+
+    .mystatus-table td:last-child {
+        border-bottom: 0;
+    }
+
+    /* Label from data-label attribute */
+    .mystatus-table td::before {
+        content: attr(data-label);
+        font-weight: 700;
+        color: #40536b;
+        font-size: 12px;
+        text-align: left;
+        margin-right: 12px;
+        flex-shrink: 0;
+    }
+
+    /* Reset sticky/hover styles from card-mode */
+    .mystatus-table th:first-child,
+    .mystatus-table td:first-child {
+        position: static;
+        box-shadow: none;
+    }
+
+    .mystatus-table tbody tr:nth-child(even),
+    .mystatus-table tbody tr:hover {
+        background: #fff;
+    }
+
+    .mystatus-table tbody tr:nth-child(even) td:first-child,
+    .mystatus-table tbody tr:hover td:first-child {
+        background: transparent;
+    }
+
+    /* No-data row spans full card */
+    .mystatus-table .no-data {
+        display: block;
+        text-align: center;
+    }
+
+    .mystatus-table .no-data::before {
+        content: none;
+    }
+}

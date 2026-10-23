@@ -1,0 +1,78 @@
+<?php
+// Student Dashboard — quick overview
+require 'db.php';
+
+$student_id = $_SESSION['student_id'] ?? '';
+
+// Example: get the student's info
+$stmt = $conn->prepare("SELECT firstname, father_name, college, department, `year` FROM users2 WHERE student_id = ? LIMIT 1");
+$stmt->bind_param("s", $student_id);
+$stmt->execute();
+$student = $stmt->get_result()->fetch_assoc();
+$stmt->close();
+
+// Count assigned courses
+$stmt = $conn->prepare("SELECT COUNT(*) AS c FROM student_courses WHERE student_id = ?");
+$stmt->bind_param("s", $student_id);
+$stmt->execute();
+$course_count = $stmt->get_result()->fetch_assoc()['c'] ?? 0;
+$stmt->close();
+?>
+
+<h2 style="color:#2c3e50;">📊 Dashboard</h2>
+
+<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:16px; margin-top:20px;">
+
+    <div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:20px; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+        <div style="font-size:11px; font-weight:700; color:#64748b; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px;">
+            Student ID
+        </div>
+        <div style="font-size:20px; font-weight:800; color:#1e3a5f;">
+            <?= htmlspecialchars($student_id) ?>
+        </div>
+    </div>
+
+    <div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:20px; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+        <div style="font-size:11px; font-weight:700; color:#64748b; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px;">
+            College
+        </div>
+        <div style="font-size:16px; font-weight:700; color:#1e3a5f;">
+            <?= htmlspecialchars($student['college'] ?? '—') ?>
+        </div>
+    </div>
+
+    <div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:20px; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+        <div style="font-size:11px; font-weight:700; color:#64748b; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px;">
+            Department
+        </div>
+        <div style="font-size:16px; font-weight:700; color:#1e3a5f;">
+            <?= htmlspecialchars($student['department'] ?? '—') ?>
+        </div>
+    </div>
+
+    <div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:20px; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+        <div style="font-size:11px; font-weight:700; color:#64748b; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px;">
+            Year
+        </div>
+        <div style="font-size:20px; font-weight:800; color:#1e3a5f;">
+            <?= htmlspecialchars($student['year'] ?? '—') ?>
+        </div>
+    </div>
+
+    <div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:20px; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+        <div style="font-size:11px; font-weight:700; color:#64748b; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px;">
+            Assigned Courses
+        </div>
+        <div style="font-size:20px; font-weight:800; color:#1e3a5f;">
+            <?= number_format($course_count) ?>
+        </div>
+    </div>
+
+</div>
+
+<div style="margin-top:30px; padding:20px; background:#f0f9ff; border-left:4px solid #0284c7; border-radius:10px;">
+    <h3 style="margin:0 0 8px; color:#0c4a6e; font-size:15px;">👋 Welcome to your Dashboard</h3>
+    <p style="margin:0; color:#475569; font-size:14px; line-height:1.6;">
+        Use the menu on the left to view your courses, grades, status, and other academic information.
+    </p>
+</div>

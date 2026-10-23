@@ -1,0 +1,332 @@
+
+/* ============================================================
+   UNIVERSITY HEADER
+   ============================================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    overflow-x: hidden;
+}
+
+body {
+    font-family: "Segoe UI", Arial, "Helvetica Neue", sans-serif;
+    background: #f0f4f8;
+    color: #1f2937;
+}
+
+/* ---------- Header ---------- */
+.uni-header {
+    background: #00c9c9;
+    color: #001f3f;
+    padding: 16px 30px;
+    display: flex;
+    align-items: center;
+    border-bottom: 3px solid #009e9e;
+    width: 100%;
+    margin-bottom: 30px;
+}
+
+.uni-header .uni-logo img {
+    display: block;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: #fff;
+    padding: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.uni-header .uni-title {
+    flex: 1;
+    text-align: center;
+    margin-left: 20px;
+}
+
+.uni-header .uni-title h1 {
+    font-family: "Times New Roman", Times, serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: #001f3f;
+    line-height: 1.3;
+    letter-spacing: 0.5px;
+}
+
+/* ---------- Grade Box ---------- */
+.grade-box {
+    max-width: 620px;
+    margin: 0 auto;
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 36px 40px 40px;
+    box-shadow: 0 10px 40px rgba(30, 58, 95, 0.1);
+    border-top: 5px solid #1e3a5f;
+}
+
+
+body {
+    margin: 30px;
+    padding-top: 150px; 
+    font-family: 'Times New Roman', serif;
+}
+
+.first {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: aqua;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    z-index: 1000;
+}
+
+.fivth {
+    position: fixed;
+    top: 120px;
+    left: 0;
+    width: 100%;
+    background-color: lightgray;
+    padding: 15px;
+    text-align: center;
+    z-index: 999;
+}
+
+.second img {
+    margin-left: 20px;
+    border-radius: 50px;
+}
+
+.third {
+    flex: 1;
+    text-align: center;
+}
+
+.third h1 {
+    font-size: 32px;
+    font-weight: bold;
+    line-height: 1.3;
+}
+
+.fourth {
+    margin-right: 40px;
+}
+
+.fourth a {
+    text-decoration: none;
+    font-weight: bold;
+    background-color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    color: black;
+    border: 2px solid #008B8B;
+}
+
+
+
+
+.fivth {
+    position: fixed;
+    top: 120px;
+    left: 0;
+    width: 100%;
+    background-color: lightgray;
+    padding: 15px;
+    text-align: center;
+  
+}
+
+.fivth a{
+    text-decoration: none;
+position: relative;
+ margin-right: 50px; }/* ===== Form Container ===== */
+.content-area {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+    background: #f4f6f9;
+}
+
+/* ===== Register Box ===== */
+.login-box {
+    width: 380px;
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* ===== Title ===== */
+.login-box h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #0b3c5d;
+    font-weight: bold;
+}
+
+/* ===== Labels ===== */
+.login-box label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+}
+
+/* ===== Inputs ===== */
+/* Style ALL input boxes equally */
+.login-box input:not([type="radio"]):not([type="submit"]) {
+    width: 100%;
+    padding: 10px;
+    margin-top: 6px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+    box-sizing: border-box; /* VERY IMPORTANT */
+}
+
+}
+
+.login-box input:focus {
+    outline: none;
+    border-color: #1abc9c;
+}
+
+/* ===== Submit Button ===== */
+.login-box input[type="submit"] {
+    width: 100%;
+    padding: 12px;
+    background: #0b3c5d;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.login-box input[type="submit"]:hover {
+    background: #174f78;
+}
+
+/* ===== Bottom Text ===== */
+.login-box p {
+    margin-top: 15px;
+    text-align: center;
+    font-size: 14px;
+}
+
+.login-box p a {
+    color: #1abc9c;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.login-box p a:hover {
+    text-decoration: underline;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 480px) {
+    .login-box {
+        width: 90%;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+/* ===== Center Form ===== */
+.grade-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* ===== Form Box ===== */
+.grade-form {
+    width: 420px;
+    background: #ffffff;
+    padding: 30px 35px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* ===== Title ===== */
+.grade-form h2 {
+    text-align: center;
+    margin-bottom: 25px;
+    color: #0b3c5d;
+    font-weight: bold;
+}
+
+/* ===== Labels ===== */
+.grade-form label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+}
+
+/* ===== Inputs & Select ===== */
+.grade-form input,
+.grade-form select {
+    width: 100%;
+    padding: 12px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    margin-bottom: 18px;
+    box-sizing: border-box;
+}
+
+/* ===== Focus Effect ===== */
+.grade-form input:focus,
+.grade-form select:focus {
+    outline: none;
+    border-color: #1abc9c;
+    box-shadow: 0 0 4px rgba(26, 188, 156, 0.4);
+}
+
+/* ===== Submit Button ===== */
+.grade-form button {
+    width: 100%;
+    padding: 14px;
+    background: #0b3c5d;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+/* ===== Button Hover ===== */
+.grade-form button:hover {
+    background: #174f78;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 480px) {
+    .grade-form {
+        width: 90%;
+    }
+}

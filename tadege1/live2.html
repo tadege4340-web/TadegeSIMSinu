@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>form validation</title>
+    <script>
+        function validationForm(){
+
+
+          
+            let name = document.getElementById("name").value;
+            if(name.trim() == ""){
+                alert("Name field cannot be empty");
+                return false;
+            }
+            return true;
+        }
+    </script>
+</head>
+<body>
+    <h1>Required field validation</h1>
+
+    <form onsubmit="return validationForm()">
+        name: <input type="text" id="name">
+        <button type="submit">submit</button>
+    </form>
+
+    <p id="result"></p>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Delete Student</title>
+    <link rel="stylesheet" href="css.css">
+</head>
+
+<body>
+    
+<div class="first">
+    <div class="second">
+        <img src="logoinu.jpg" width="100" height="100">
+    </div>
+    <div class="third">
+        <h1>INJIBARA UNIVERSITY<br>STUDENT INFORMATION MANAGEMENT SYSTEM</h1>
+    </div>
+</div>
+
+<div class="fivth">
+    <a href="a.html">HOME</a>
+    <a href="B.html">CONTACT US</a>
+    <a href="C.html">NEWS</a>
+</div>
+
+<h1>Delete Student</h1>
+
+<form id="deleteForm">
+   <h3> <label>Enter Student ID or Email to Delete:</label><br></h3>
+    <input type="text" id="deleteKey" placeholder="ID or Email" required>
+    <input type="button" value="DELETE" onclick="deleteStudent()">
+</form>
+
+<br>
+
+
+<table border="1" cellpadding="10" id="studentTable">
+    <thead>
+        <tr>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>ID</th>
+            <th>Email</th>
+            <th>Department</th>
+            <th>Year</th>
+        </tr>
+    </thead>
+
+    <tbody>
+    </tbody>
+</table>
+
+<script>
+
+// Load students into table
+function loadStudents() {
+    let list = JSON.parse(localStorage.getItem("students")) || [];
+    let tbody = document.querySelector("#studentTable tbody");
+    tbody.innerHTML = "";
+
+    list.forEach(student => {
+        let row = `
+            <tr>
+                <td>${student.firstname}</td>
+                <td>${student.lastname}</td>
+                <td>${student.id}</td>
+                <td>${student.email}</td>
+                <td>${student.department}</td>
+                <td>${student.year}</td>
+            </tr>
+        `;
+        tbody.innerHTML += row;
+    });
+}
+
+// Delete by ID or Email
+function deleteStudent() {
+    let key = document.getElementById("deleteKey").value.trim();
+    if (!key) return alert("Please enter ID or Email!");
+
+    let list = JSON.parse(localStorage.getItem("students")) || [];
+    let index = list.findIndex(student => student.id === key || student.email === key);
+
+    if (index !== -1) {
+        if (confirm(`Are you sure you want to delete ${list[index].firstname} ${list[index].lastname}?`)) {
+            list.splice(index, 1);  // remove student
+            localStorage.setItem("students", JSON.stringify(list));
+            loadStudents();
+            alert("Student deleted successfully!");
+            document.getElementById("deleteKey").value = ""; // clear input
+        }
+    } else {
+        alert("Student not found with this ID or Email.");
+    }
+}
+
+window.onload = loadStudents;
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Update Student</title>
+    <link rel="stylesheet" href="css.css">
+</head>
+
+<body>
+
+<div class="first">
+    <div class="second">
+        <img src="logoinu.jpg" width="100" height="100">
+    </div>
+    <div class="third">
+        <h1>INJIBARA UNIVERSITY<br>STUDENT INFORMATION MANAGEMENT SYSTEM</h1>
+    </div>
+</div>
+
+<div class="fivth">
+    <a href="a.html">HOME</a>
+    <a href="B.html">CONTACT US</a>
+    <a href="C.html">NEWS</a>
+</div>
+
+<h1>Update Student</h1>
+
+<form id="updateForm">
+    <h3><label>Enter Student ID or Email to Update:</label><br></h3>
+    <input type="text" id="updateKey" placeholder="ID or Email" required>
+    <input type="button" value="UPDATE" onclick="loadStudentForUpdate()">
+
+    <div id="updateFields" style="display:none; margin-top:10px;">
+
+        <label>First Name</label>
+        <input type="text" id="updFirstname" required><br><br>
+
+        <label>Last Name</label>
+        <input type="text" id="updLastname" required><br><br>
+
+        <label>Age</label>
+        <input type="number" id="updAge" required><br><br>
+
+        <label>ID</label>
+        <input type="text" id="updID" required><br><br>
+
+        <label>Gender:</label><br>
+        <input type="radio" name="updGender" value="Male"> MALE <br>
+        <input type="radio" name="updGender" value="Female"> FEMALE <br><br>
+
+        <label>Email</label>
+        <input type="email" id="updEmail" required><br><br>
+
+        <label>Phone No</label>
+        <input type="tel" id="updPhone" maxlength="10"><br><br>
+
+        <label>Department</label>
+        <select id="updDepartment">
+            <option value="CS">Computer Science</option>
+            <option value="ECE">Electrical & Computer Eng.</option>
+            <option value="SE">Software Engineering</option>
+            <option value="IS">Information Systems</option>
+            <option value="IT">Information Technology</option>
+            <option value="CE">Civil Engineering</option>
+            <option value="ECON">Economics</option>
+            <option value="ACC">Accounting</option>
+            <option value="MGT">Management</option>
+        </select><br><br>
+
+        <label>Year</label>
+        <input type="number" id="updYear" min="1" max="7" required><br><br>
+
+        <input type="button" value="UPDATE" onclick="updateStudent()">
+    </div>
+</form>
+
+<br>
+
+<table border="1" cellpadding="10" id="studentTable">
+    <thead>
+        <tr>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Age</th>
+            <th>ID</th>
+            <th>Gender</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Department</th>
+            <th>Year</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<script>
+
+// Load table
+function loadStudents() {
+    let list = JSON.parse(localStorage.getItem("students")) || [];
+    let tbody = document.querySelector("#studentTable tbody");
+    tbody.innerHTML = "";
+
+    list.forEach(s => {
+        let row = `
+            <tr>
+                <td>${s.firstname}</td>
+                <td>${s.lastname}</td>
+                <td>${s.age}</td>
+                <td>${s.id}</td>
+                <td>${s.gender}</td>
+                <td>${s.email}</td>
+                <td>${s.phone}</td>
+                <td>${s.department}</td>
+                <td>${s.year}</td>
+            </tr>`;
+        tbody.innerHTML += row;
+    });
+}
+
+// Load student into update form
+function loadStudentForUpdate() {
+    let key = document.getElementById("updateKey").value.trim();
+    if (!key) return alert("Enter ID or Email!");
+
+    let list = JSON.parse(localStorage.getItem("students")) || [];
+    let s = list.find(st => st.id === key || st.email === key);
+
+    if (!s) return alert("Student not found!");
+
+    document.getElementById("updateFields").style.display = "block";
+
+    document.getElementById("updFirstname").value = s.firstname;
+    document.getElementById("updLastname").value = s.lastname;
+    document.getElementById("updAge").value = s.age;
+    document.getElementById("updID").value = s.id;
+    document.getElementById("updEmail").value = s.email;
+    document.getElementById("updPhone").value = s.phone;
+    document.getElementById("updDepartment").value = s.department;
+    document.getElementById("updYear").value = s.year;
+
+    document.querySelector(`input[name='updGender'][value='${s.gender}']`).checked = true;
+}
+
+// Save updated data
+function updateStudent() {
+    let key = document.getElementById("updateKey").value.trim();
+    let list = JSON.parse(localStorage.getItem("students")) || [];
+    let index = list.findIndex(s => s.id === key || s.email === key);
+
+    if (index === -1) return alert("Student not found!");
+
+    list[index] = {
+        firstname: document.getElementById("updFirstname").value.trim(),
+        lastname: document.getElementById("updLastname").value.trim(),
+        age: document.getElementById("updAge").value.trim(),
+        id: document.getElementById("updID").value.trim(),
+        gender: document.querySelector("input[name='updGender']:checked").value,
+        email: document.getElementById("updEmail").value.trim(),
+        phone: document.getElementById("updPhone").value.trim(),
+        department: document.getElementById("updDepartment").value,
+        year: document.getElementById("updYear").value.trim()
+    };
+
+    localStorage.setItem("students", JSON.stringify(list));
+    loadStudents();
+
+    alert("Student updated successfully!");
+
+    document.getElementById("updateForm").reset();
+    document.getElementById("updateFields").style.display = "none";
+}
+
+window.onload = loadStudents;
+
+</script>
+
+</body>
+</html>

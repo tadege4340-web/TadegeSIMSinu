@@ -1,0 +1,259 @@
+/* ===========================================================
+   BODY
+   =========================================================== */
+body {
+    margin: 0;
+    padding-top: 170px;              /* space for fixed header + top menu */
+    padding-left: 220px;             /* space for fixed left sidebar */
+    font-family: 'Times New Roman', serif;
+    background-color: #ffffff;
+}
+
+/* ===========================================================
+   UNIVERSITY HEADER  (fixed at top)
+   =========================================================== */
+.first {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 120px;
+    background-color: aqua;
+    display: flex;
+    align-items: center;
+    z-index: 1000;
+}
+
+.second img {
+    margin-left: 20px;
+    border-radius: 50%;
+}
+
+.third {
+    flex: 1;
+    text-align: center;
+}
+
+.third h1 {
+    font-size: 32px;
+    font-weight: bold;
+    line-height: 1.3;
+    margin: 0;
+}
+
+/* ===========================================================
+   TOP MENU (fixed under header)
+   =========================================================== */
+.fivth {
+    position: fixed;
+    top: 120px;
+    left: 0;
+    width: 100%;
+    background-color: lightgray;
+    padding: 15px;
+    text-align: center;
+    z-index: 999;
+    box-sizing: border-box;
+}
+
+.fivth a {
+    text-decoration: none;
+    color: black;
+    font-weight: bold;
+    margin-right: 50px;
+    padding: 8px 15px;
+}
+
+.fivth a:hover {
+    color: blue;
+}
+
+/* ===========================================================
+   LEFT ADMIN SIDEBAR (fixed)
+   =========================================================== */
+.admin-sidebar {
+    position: fixed;
+    top: 150px;
+    left: 0;
+    width: 220px;
+    height: calc(100vh - 150px);
+    background-color: #2c3e50;
+    padding-top: 20px;
+    z-index: 998;
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+.admin-sidebar h2 {
+    color: white;
+    text-align: center;
+    font-size: 20px;
+    margin: 0;
+    padding: 15px 5px 20px;
+}
+
+.admin-sidebar a {
+    display: block;
+    color: white;
+    text-decoration: none;
+    padding: 14px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    border-bottom: 1px solid #465a6e;
+    box-sizing: border-box;
+}
+
+.admin-sidebar a:hover {
+    background-color: #1abc9c;
+    color: white;
+    padding-left: 25px;
+}
+
+.admin-sidebar .logout-link {
+    margin-top: 25px;
+    background-color: #c0392b;
+    border-bottom: none;
+}
+
+.admin-sidebar .logout-link:hover {
+    background-color: #e74c3c;
+    padding-left: 25px;
+}
+
+/* ===========================================================
+   MAIN CONTENT (right side of the page — no iframe now)
+   =========================================================== */
+.main-content {
+    margin: 30px;
+    padding: 30px;
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    min-height: 500px;
+}
+
+.main-content h1,
+.main-content h2 {
+    color: #2c3e50;
+    text-align: center;
+}
+
+.main-content p {
+    font-size: 18px;
+    line-height: 1.6;
+}
+
+/* ===========================================================
+   FORM ELEMENTS INSIDE MAIN-CONTENT
+   =========================================================== */
+.main-content form label {
+    display: block;
+    margin-top: 14px;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #2c3e50;
+    font-size: 15px;
+}
+
+.main-content form input[type="text"],
+.main-content form input[type="number"],
+.main-content form input[type="email"],
+.main-content form input[type="tel"],
+.main-content form select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 15px;
+    box-sizing: border-box;
+    background: #ffffff;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.main-content form input:focus,
+.main-content form select:focus {
+    outline: none;
+    border-color: #1abc9c;
+    box-shadow: 0 0 0 3px rgba(26, 188, 156, 0.2);
+}
+
+.main-content form input[type="radio"] {
+    margin-right: 6px;
+    margin-left: 4px;
+    accent-color: #1abc9c;
+    transform: scale(1.1);
+    vertical-align: middle;
+}
+
+.main-content form input[type="submit"] {
+    display: block;
+    width: 100%;
+    margin-top: 24px;
+    padding: 12px;
+    background-color: #2c3e50;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.main-content form input[type="submit"]:hover {
+    background-color: #1abc9c;
+}
+
+/* ===========================================================
+   TABLES INSIDE MAIN-CONTENT  (for view.php etc.)
+   =========================================================== */
+.main-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background: #fff;
+}
+
+.main-content table th,
+.main-content table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+    font-size: 15px;
+}
+
+.main-content table th {
+    background: #2c3e50;
+    color: white;
+}
+
+.main-content table tr:nth-child(even) {
+    background: #f2f2f2;
+}
+
+/* ===========================================================
+   RESPONSIVE
+   =========================================================== */
+@media screen and (max-width: 768px) {
+    .third h1 { font-size: 20px; }
+
+    .admin-sidebar { width: 180px; }
+
+    body { padding-left: 180px; }
+
+    .admin-sidebar a {
+        font-size: 14px;
+        padding: 12px 10px;
+    }
+
+    .fivth a {
+        margin-right: 10px;
+        padding: 5px;
+    }
+
+    .main-content {
+        margin: 15px;
+        padding: 20px;
+    }
+}

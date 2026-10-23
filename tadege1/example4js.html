@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>All Operations</title>
+</head>
+<body>
+
+<h2>JavaScript Operations Example</h2>
+<form action="">
+    <input type="text" id="num1">
+        <input type="text" id="num2">
+        <button type="button" onclick="start()">ADD</button>
+
+</form>
+<p id="output"></p>
+
+<script>
+  function start(){
+    let a  = Number(document.getElementById("num1").value);
+     let b= Number(document.getElementById("num2").value);
+     let sum= (a + b);
+     document.getElementById("output").innerHTML="the result is " + sum;
+  }
+</script>
+
+</body>
+</html>

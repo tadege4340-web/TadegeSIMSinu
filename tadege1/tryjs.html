@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <form action="tadege">
+        <input type="text" id="gebrie">
+        <button type="button" onclick="myfunction()">ADD</button>
+    </form>
+   <p id =name>gebrie</p> 
+   <script>
+    function myfunction(){
+        let name=document.getElementById("gebrie").value;
+        document.getElementById("name").innerHTML="thenameis=" + name;
+    }
+    var name=prompt("enter the name ")
+    document.getElementById("name").innerHTML="the name is =" + name;
+   </script>
+</body>
+</html>
