@@ -8,15 +8,14 @@ $pass = getenv('DB_PASSWORD');
 $db   = "defaultdb";
 $port = 15670;
 
-// 1. Create the connection FIRST
-$conn = new mysqli($host, $user, $pass, $db, $port);
+// Use PDO with SSL verification (This is the correct way for Aiven)
+$dsn = "mysql:host=$host;port=$port;dbname=$db;sslmode=verify-ca;sslrootcert=/var/www/html/ca.pem";
 
-// 2. Then set the SSL certificate
-mysqli_ssl_set($conn, NULL, NULL, '/var/www/html/ca.pem', NULL, NULL);
-
-// 3. Check for errors
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+try {
+    $conn = new PDO($dsn, $user, $pass);
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    echo "Database connected successfully with PDO!";
+} catch (PDOException $e) {
+    die("Connection failed: " . $e->getMessage());
 }
-$conn->set_charset("utf8mb4");
 ?>
