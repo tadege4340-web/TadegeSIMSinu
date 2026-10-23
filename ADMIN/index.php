@@ -1,6 +1,5 @@
 <?php
-// This is the main entry point. 
-// It automatically redirects the user to your login page.
-header("Location: login.php");
+// Redirect the user to stud1.php
+header("Location: stud1.php");
 exit();
 ?>
