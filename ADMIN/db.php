@@ -14,7 +14,7 @@ $dsn = "mysql:host=$host;port=$port;dbname=$db;sslmode=verify-ca;sslrootcert=/va
 try {
     $conn = new PDO($dsn, $user, $pass);
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    echo "Database connected successfully with PDO!";
+   
 } catch (PDOException $e) {
     die("Connection failed: " . $e->getMessage());
 }
