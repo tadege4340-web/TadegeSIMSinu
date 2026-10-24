@@ -13,35 +13,30 @@ if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['head', 'admin
 $hod_department = trim($_SESSION['department'] ?? '');
 $hod_college    = trim($_SESSION['college'] ?? '');
 
-// 2. Fetch Teachers Query (Added email and phone)
+// 2. Fetch Teachers Query (PDO)
 $sql = "SELECT full_name, gender, email, phone 
         FROM teachers 
         WHERE 1=1";
         
 $params = [];
-$types  = "";
 
 // Filter by department if the user is a Head
 if ($_SESSION['role'] !== 'admin' && $hod_department !== '') {
-    $sql .= " AND department = ?";
-    $params[] = $hod_department;
-    $types .= "s";
+    $sql .= " AND department = :dept";
+    $params['dept'] = $hod_department;
 }
 
 $sql .= " ORDER BY full_name ASC";
 
-$stmt = $conn->prepare($sql);
-if ($types !== '') {
-    $stmt->bind_param($types, ...$params);
-}
-$stmt->execute();
-$result = $stmt->get_result();
-
 $teachers = [];
-while ($row = $result->fetch_assoc()) {
-    $teachers[] = $row;
+
+try {
+    $stmt = $conn->prepare($sql);
+    $stmt->execute($params);
+    $teachers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $db_error = $e->getMessage();
 }
-$stmt->close();
 
 // 3. Load the HTML View
 include 'Headviewteacherf.php';

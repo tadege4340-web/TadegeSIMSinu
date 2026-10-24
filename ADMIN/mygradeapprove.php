@@ -1,7 +1,6 @@
 <?php
 /* ============================================================
-   MY GRADE APPROVE — REGISTRAR APPROVAL PAGE
-   Approves/Rejects submitted grades from teachers
+   MY GRADE APPROVE — REGISTRAR APPROVAL PAGE (PDO Version)
    ============================================================ */
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -32,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $reason      = trim($_POST['reason'] ?? '');
 
     /* ============================================================
-       ACTION 1: APPROVE ALL
+       ACTION 1: APPROVE ALL (PDO)
        ============================================================ */
     if ($action === 'approve') {
 
@@ -40,44 +39,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $message = "⚠️ Missing parameters.";
             $message_type = "error";
         } else {
+            try {
+                // Update only Pending grades
+                $upd = $conn->prepare("
+                    UPDATE student_courses 
+                    SET grade_status = 'Approved',
+                        approved_at = NOW(),
+                        approved_by = :registrar
+                    WHERE course_code = :ccode 
+                      AND ac_year = :ayear 
+                      AND semester = :sem
+                      AND grade_status = 'Pending'");
+                $upd->execute([
+                    'registrar' => $registrar,
+                    'ccode' => $course_code,
+                    'ayear' => $ac_year,
+                    'sem' => $semester
+                ]);
+                
+                $count = $upd->rowCount();
 
-            $upd = $conn->prepare("
-                UPDATE student_courses 
-                SET grade_status = 'Approved',
-                    approved_at = NOW(),
-                    approved_by = ?
-                WHERE course_code = ? AND ac_year = ? AND semester = ?
-                  AND grade_status = 'Submitted'");
-            $upd->bind_param("sssi", $registrar, $course_code, $ac_year, $semester);
-
-            if ($upd->execute()) {
-                $count = $upd->affected_rows;
-
+                // Log the approval
                 $audit = $conn->prepare("
                     INSERT INTO grade_audit_log 
                         (student_id, course_code, ac_year, semester,
                          action, action_by, reason)
-                    VALUES ('*', ?, ?, ?, 'approved', ?, ?)");
+                    VALUES ('*', :ccode, :ayear, :sem, 'approved', :registrar, :reason)");
                 $reason_txt = "$count grades approved by registrar";
-                $audit->bind_param("ssiss", $course_code, $ac_year, $semester, $registrar, $reason_txt);
-                $audit->execute();
-                $audit->close();
+                $audit->execute([
+                    'ccode' => $course_code,
+                    'ayear' => $ac_year,
+                    'sem' => $semester,
+                    'registrar' => $registrar,
+                    'reason' => $reason_txt
+                ]);
 
                 $message = "✅ <strong>Approved $count grades!</strong><br>"
                          . "Course: <strong>" . htmlspecialchars($course_code) . "</strong><br>"
                          . "Year: <strong>" . htmlspecialchars($ac_year) . "</strong> — "
                          . "Semester <strong>" . htmlspecialchars($semester) . "</strong>";
                 $message_type = "success";
-            } else {
-                $message = "❌ Error: " . $conn->error;
+            } catch (PDOException $e) {
+                $message = "❌ Error: " . $e->getMessage();
                 $message_type = "error";
             }
-            $upd->close();
         }
     }
 
     /* ============================================================
-       ACTION 2: REJECT / RETURN TO TEACHER
+       ACTION 2: REJECT / RETURN TO TEACHER (PDO)
        ============================================================ */
     elseif ($action === 'reject') {
 
@@ -88,122 +98,124 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $message = "⚠️ Please provide a reason for rejection.";
             $message_type = "error";
         } else {
+            try {
+                $upd = $conn->prepare("
+                    UPDATE student_courses 
+                    SET grade_status = 'Pending',
+                        submitted_at = NULL,
+                        submitted_by = NULL,
+                        rejection_reason = :reason
+                    WHERE course_code = :ccode 
+                      AND ac_year = :ayear 
+                      AND semester = :sem
+                      AND grade_status = 'Pending'");
+                $upd->execute([
+                    'reason' => $reason,
+                    'ccode' => $course_code,
+                    'ayear' => $ac_year,
+                    'sem' => $semester
+                ]);
 
-            $upd = $conn->prepare("
-                UPDATE student_courses 
-                SET grade_status = 'Pending',
-                    submitted_at = NULL,
-                    submitted_by = NULL,
-                    rejection_reason = ?
-                WHERE course_code = ? AND ac_year = ? AND semester = ?
-                  AND grade_status = 'Submitted'");
-            $upd->bind_param("sssi", $reason, $course_code, $ac_year, $semester);
-
-            if ($upd->execute()) {
-                $count = $upd->affected_rows;
+                $count = $upd->rowCount();
 
                 $audit = $conn->prepare("
                     INSERT INTO grade_audit_log 
                         (student_id, course_code, ac_year, semester,
                          action, action_by, reason)
-                    VALUES ('*', ?, ?, ?, 'rejected', ?, ?)");
-                $audit->bind_param("ssiss", $course_code, $ac_year, $semester, $registrar, $reason);
-                $audit->execute();
-                $audit->close();
+                    VALUES ('*', :ccode, :ayear, :sem, 'rejected', :registrar, :reason)");
+                $audit->execute([
+                    'ccode' => $course_code,
+                    'ayear' => $ac_year,
+                    'sem' => $semester,
+                    'registrar' => $registrar,
+                    'reason' => $reason
+                ]);
 
                 $message = "↩️ <strong>Returned $count grades to teacher.</strong><br>"
                          . "Course: <strong>" . htmlspecialchars($course_code) . "</strong><br>"
                          . "Reason: " . htmlspecialchars($reason);
                 $message_type = "success";
-            } else {
-                $message = "❌ Error: " . $conn->error;
+            } catch (PDOException $e) {
+                $message = "❌ Error: " . $e->getMessage();
                 $message_type = "error";
             }
-            $upd->close();
         }
     }
 }
 
 /* ============================================================
-   LOAD COLLEGES (for filter)
+   LOAD COLLEGES (FOR FILTER) - PDO
    ============================================================ */
 $colleges = [];
-$r = $conn->query("SELECT code, name FROM college ORDER BY name");
-if ($r) while ($row = $r->fetch_assoc()) $colleges[] = $row;
+try {
+    $r = $conn->query("SELECT code, name FROM college ORDER BY name");
+    $colleges = $r->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {}
 
 /* ============================================================
-   LOAD DEPARTMENTS (for selected college)
+   LOAD DEPARTMENTS (FOR SELECTED COLLEGE) - PDO
    ============================================================ */
 $departments = [];
 if ($f_college !== '') {
-    $stmt = $conn->prepare("
-        SELECT name FROM departments 
-        WHERE college_code = ? 
-        ORDER BY name");
-    $stmt->bind_param("s", $f_college);
-    $stmt->execute();
-    $res = $stmt->get_result();
-    while ($row = $res->fetch_assoc()) $departments[] = $row['name'];
-    $stmt->close();
+    try {
+        $stmt = $conn->prepare("SELECT name FROM departments WHERE college_code = :cc ORDER BY name");
+        $stmt->execute(['cc' => $f_college]);
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $departments[] = $row['name'];
+        }
+    } catch (PDOException $e) {}
 }
 
 /* ============================================================
-   FETCH SUBMITTED GROUPS (waiting for approval)
+   FETCH SUBMITTED GROUPS (WAITING FOR APPROVAL) - PDO
    ============================================================ */
 $submittedGroups = [];
 
-$sql = "
-    SELECT 
-        sc.course_code,
-        COALESCE(a.course_name, sc.course_code) AS course_name,
-        sc.ac_year,
-        sc.semester,
-        a.department,
-        a.course_year,
-        a.college,
-        sc.submitted_by,
-        sc.submitted_at,
-        COUNT(*) AS total,
-        SUM(CASE WHEN sc.grade IS NULL THEN 1 ELSE 0 END) AS missing,
-        SUM(CASE WHEN sc.grade IS NOT NULL THEN 1 ELSE 0 END) AS graded
-    FROM student_courses sc
-    LEFT JOIN addcourse a ON a.course_code = sc.course_code
-    WHERE sc.grade_status = 'Submitted'";
+try {
+    $sql = "
+        SELECT 
+            sc.course_code,
+            COALESCE(a.course_name, sc.course_code) AS course_name,
+            sc.ac_year,
+            sc.semester,
+            a.department,
+            a.course_year,
+            a.college,
+            sc.submitted_by,
+            sc.submitted_at,
+            COUNT(*) AS total,
+            SUM(CASE WHEN sc.grade IS NULL THEN 1 ELSE 0 END) AS missing,
+            SUM(CASE WHEN sc.grade IS NOT NULL THEN 1 ELSE 0 END) AS graded
+        FROM student_courses sc
+        LEFT JOIN addcourse a ON a.course_code = sc.course_code
+        WHERE sc.grade_status = 'Pending'";
 
-$params = [];
-$types  = '';
+    $params = [];
 
-if ($f_college !== '') {
-    $sql .= " AND a.college = ?";
-    $params[] = $f_college;
-    $types .= 's';
-}
-if ($f_department !== '') {
-    $sql .= " AND a.department = ?";
-    $params[] = $f_department;
-    $types .= 's';
-}
-if ($f_year > 0) {
-    $sql .= " AND a.course_year = ?";
-    $params[] = $f_year;
-    $types .= 'i';
-}
+    if ($f_college !== '') {
+        $sql .= " AND a.college = :college";
+        $params['college'] = $f_college;
+    }
+    if ($f_department !== '') {
+        $sql .= " AND a.department = :department";
+        $params['department'] = $f_department;
+    }
+    if ($f_year > 0) {
+        $sql .= " AND a.course_year = :year";
+        $params['year'] = $f_year;
+    }
 
-$sql .= " GROUP BY sc.course_code, sc.ac_year, sc.semester, 
-                 a.course_name, a.department, a.course_year, a.college,
-                 sc.submitted_by, sc.submitted_at
-          ORDER BY sc.submitted_at DESC, sc.ac_year DESC, sc.semester DESC";
+    $sql .= " GROUP BY sc.course_code, sc.ac_year, sc.semester, 
+                     a.course_name, a.department, a.course_year, a.college,
+                     sc.submitted_by, sc.submitted_at
+              ORDER BY sc.submitted_at DESC, sc.ac_year DESC, sc.semester DESC";
 
-$stmt = $conn->prepare($sql);
-if (!empty($params)) {
-    $stmt->bind_param($types, ...$params);
+    $stmt = $conn->prepare($sql);
+    $stmt->execute($params);
+    $submittedGroups = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $message = "Error loading grades: " . $e->getMessage();
 }
-$stmt->execute();
-$res = $stmt->get_result();
-while ($row = $res->fetch_assoc()) {
-    $submittedGroups[] = $row;
-}
-$stmt->close();
 
 /* ============================================================
    LOAD HEADER + VIEW + FOOTER
@@ -211,3 +223,4 @@ $stmt->close();
 include 'header.php';
 include 'mygradeapprovef.php';
 include 'footer.php';
+?>

@@ -9,21 +9,25 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !empty($_POST['deleteKey'])) {
 
     $deleteKey = trim($_POST['deleteKey']);
 
-    // Delete by ID OR Email
-    $stmt = $conn->prepare("DELETE FROM teachers WHERE id = ? OR email = ?");
-    $stmt->bind_param("ss", $deleteKey, $deleteKey);
-    $stmt->execute();
+    try {
+        // Delete by ID OR Email (PDO)
+        $stmt = $conn->prepare("DELETE FROM teachers WHERE id = :id OR email = :email");
+        $stmt->execute(['id' => $deleteKey, 'email' => $deleteKey]);
 
-    if ($stmt->affected_rows > 0) {
-        $message = "✅ Teacher deleted successfully!";
-        $messageType = "success";
-    } else {
-        $message = "❌ No teacher found with ID or Email: " . htmlspecialchars($deleteKey);
+        if ($stmt->rowCount() > 0) {
+            $message = "✅ Teacher deleted successfully!";
+            $messageType = "success";
+        } else {
+            $message = "❌ No teacher found with ID or Email: " . htmlspecialchars($deleteKey);
+        }
+    } catch (PDOException $e) {
+        $message = "❌ Database Error: " . $e->getMessage();
     }
-    $stmt->close();
 }
 
-$result = $conn->query("SELECT * FROM teachers ORDER BY id ASC");
+/* ============ FETCH ALL TEACHERS (PDO) ============ */
+$stmt = $conn->query("SELECT * FROM teachers ORDER BY id ASC");
+$teachers = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 /* ============ COLLEGE NAME LOOKUP ============ */
 $college_names = [
@@ -83,9 +87,9 @@ $college_names = [
         </tr>
     </thead>
     <tbody>
-        <?php if ($result && $result->num_rows > 0): ?>
+        <?php if (!empty($teachers)): ?>
             <?php $count = 1; ?>
-            <?php while ($row = $result->fetch_assoc()): ?>
+            <?php foreach ($teachers as $row): ?>
                 <tr>
                     <td><?= $count++ ?></td>
                     <td><?= htmlspecialchars($row['id']) ?></td>
@@ -120,7 +124,7 @@ $college_names = [
                         </form>
                     </td>
                 </tr>
-            <?php endwhile; ?>
+            <?php endforeach; ?>
         <?php else: ?>
             <tr><td colspan="15" style="color:red;">No teachers found.</td></tr>
         <?php endif; ?>

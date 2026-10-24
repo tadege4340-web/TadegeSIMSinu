@@ -6,25 +6,30 @@
 // SEARCH (optional filter)
 // ======================
 $student_id = trim($_GET['student_id'] ?? '');
-$result     = null;
+$grades = []; // Array to hold the results
 
-if ($student_id !== '') {
-    // Filter by student ID
-    $stmt = $conn->prepare(
-        "SELECT * FROM users4
-         WHERE student_id = ?
-         ORDER BY academic_year DESC, semester ASC"
-    );
-    $stmt->bind_param("s", $student_id);
-} else {
-    // No filter — show ALL grades
-    $stmt = $conn->prepare(
-        "SELECT * FROM users4
-         ORDER BY student_id ASC, academic_year DESC, semester ASC"
-    );
+try {
+    if ($student_id !== '') {
+        // Filter by student ID (PDO)
+        $stmt = $conn->prepare(
+            "SELECT * FROM users4
+             WHERE student_id = :sid
+             ORDER BY academic_year DESC, semester ASC"
+        );
+        $stmt->execute(['sid' => $student_id]);
+    } else {
+        // No filter — show ALL grades (PDO)
+        $stmt = $conn->prepare(
+            "SELECT * FROM users4
+             ORDER BY student_id ASC, academic_year DESC, semester ASC"
+        );
+        $stmt->execute();
+    }
+    
+    $grades = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $db_error = $e->getMessage();
 }
-$stmt->execute();
-$result = $stmt->get_result();
 ?>
 
 <h2 style="text-align:center; color:#2c3e50;">All Student Grades</h2>
@@ -59,8 +64,8 @@ $result = $stmt->get_result();
         </tr>
     </thead>
     <tbody>
-        <?php if ($result->num_rows > 0): ?>
-            <?php while ($row = $result->fetch_assoc()): ?>
+        <?php if (!empty($grades)): ?>
+            <?php foreach ($grades as $row): ?>
                 <tr>
                     <td><?= htmlspecialchars($row['username']) ?></td>
                     <td><?= htmlspecialchars($row['student_id']) ?></td>
@@ -72,7 +77,7 @@ $result = $stmt->get_result();
                     <td><?= htmlspecialchars($row['academic_year']) ?></td>
                     <td><?= htmlspecialchars($row['gpa']) ?></td>
                 </tr>
-            <?php endwhile; ?>
+            <?php endforeach; ?>
         <?php else: ?>
             <tr>
                 <td colspan="9" style="color:#991b1b; font-weight:bold;">
@@ -84,26 +89,23 @@ $result = $stmt->get_result();
 </table>
 
 <?php
-$stmt->close();
-
 // ======================
-// CUMULATIVE GPA (only when filtering by student)
+// CUMULATIVE GPA (only when filtering by student) - PDO
 // ======================
 if ($student_id !== '') {
-    $stmt2 = $conn->prepare("SELECT AVG(gpa) AS cumulative_gpa FROM users4 WHERE student_id = ?");
-    $stmt2->bind_param("s", $student_id);
-    $stmt2->execute();
-    $gpa_result = $stmt2->get_result();
+    try {
+        $stmt2 = $conn->prepare("SELECT AVG(gpa) AS cumulative_gpa FROM users4 WHERE student_id = :sid");
+        $stmt2->execute(['sid' => $student_id]);
+        $gpa_row = $stmt2->fetch(PDO::FETCH_ASSOC);
 
-    if ($gpa_result && $gpa_result->num_rows > 0) {
-        $gpa_row = $gpa_result->fetch_assoc();
-        if ($gpa_row['cumulative_gpa'] !== null) {
+        if ($gpa_row && $gpa_row['cumulative_gpa'] !== null) {
             echo '<h3 style="text-align:center; color:#2c3e50; margin-top:20px;">'
                  . 'Cumulative GPA: ' . number_format($gpa_row['cumulative_gpa'], 2)
                  . '</h3>';
         }
+    } catch (PDOException $e) {
+        // Ignore error if average cannot be calculated
     }
-    $stmt2->close();
 }
 ?>
 

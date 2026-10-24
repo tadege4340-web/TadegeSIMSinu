@@ -1,6 +1,6 @@
 <?php
 /* ============================================================
-   ADMIN — VIEW ALL STUDENT GRADES (LOGIC)
+   ADMIN — VIEW ALL STUDENT GRADES (LOGIC) - PDO Version
    ============================================================ */
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -25,7 +25,7 @@ $filter_year    = trim($_GET['ac_year'] ?? '');
 $search         = trim($_GET['q']       ?? '');
 
 /* ============================================================
-   STEP 1 — GET ALL SEMESTERS (for SGPA/CGPA computation)
+   STEP 1 — GET ALL SEMESTERS (PDO)
    ============================================================ */
 $sqlSem = "SELECT 
                 sc.student_id,
@@ -41,45 +41,39 @@ $sqlSem = "SELECT
               AND sc.semester IS NOT NULL";
 
 $params = [];
-$types  = '';
 
 if ($filter_college !== '') {
-    $sqlSem .= " AND u.college = ?";
-    $params[] = $filter_college;
-    $types .= 's';
+    $sqlSem .= " AND u.college = :college";
+    $params['college'] = $filter_college;
 }
 if ($filter_dept !== '') {
-    $sqlSem .= " AND u.department = ?";
-    $params[] = $filter_dept;
-    $types .= 's';
+    $sqlSem .= " AND u.department = :dept";
+    $params['dept'] = $filter_dept;
 }
 if ($filter_year !== '') {
-    $sqlSem .= " AND sc.ac_year = ?";
-    $params[] = $filter_year;
-    $types .= 's';
+    $sqlSem .= " AND sc.ac_year = :ac_year";
+    $params['ac_year'] = $filter_year;
 }
 
-$stmt = $conn->prepare($sqlSem);
-if (!empty($params)) {
-    $stmt->bind_param($types, ...$params);
+try {
+    $stmt = $conn->prepare($sqlSem);
+    $stmt->execute($params);
+    $semRows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $semRows = [];
 }
-$stmt->execute();
-$semRows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-$stmt->close();
 
 /* ============================================================
    STEP 2 — GROUP BY (student, year, semester) & COMPUTE SGPA
    ============================================================ */
-$sgpaByKey = [];  // key: "student_id|ac_year|semester" => sgpa
+$sgpaByKey = [];  
 
-// Group rows
 $grouped = [];
 foreach ($semRows as $r) {
     $key = $r['student_id'] . '|' . $r['ac_year'] . '|' . $r['semester'];
     $grouped[$key][] = $r;
 }
 
-// Compute SGPA for each group
 foreach ($grouped as $key => $rows) {
     $totalPoints = 0;
     $totalCredits = 0;
@@ -91,21 +85,18 @@ foreach ($grouped as $key => $rows) {
 }
 
 /* ============================================================
-   STEP 3 — COMPUTE CGPA PER STUDENT (cumulative across semesters)
+   STEP 3 — COMPUTE CGPA PER STUDENT
    ============================================================ */
-$cgpaByStudent = [];  // key: student_id => cgpa
+$cgpaByStudent = [];
 
-// Group SGPA-relevant data by student
 $studentSemesters = [];
 foreach ($grouped as $key => $rows) {
     list($sid, $year, $sem) = explode('|', $key);
     $studentSemesters[$sid][$year . '|' . $sem] = $rows;
 }
 
-// For each student, compute cumulative GPA (order by year + sem ascending)
 foreach ($studentSemesters as $sid => $semesters) {
-    ksort($semesters); // ascending order
-
+    ksort($semesters); 
     $cumPoints = 0;
     $cumCredits = 0;
     foreach ($semesters as $semKey => $rows) {
@@ -118,7 +109,7 @@ foreach ($studentSemesters as $sid => $semesters) {
 }
 
 /* ============================================================
-   STEP 4 — MAIN QUERY: fetch all rows for display
+   STEP 4 — MAIN QUERY: fetch all rows for display (PDO)
    ============================================================ */
 $sql = "SELECT 
             sc.id,
@@ -142,41 +133,33 @@ $sql = "SELECT
         WHERE 1=1";
 
 $params = [];
-$types  = '';
 
 if ($filter_college !== '') {
-    $sql .= " AND u.college = ?";
-    $params[] = $filter_college;
-    $types .= 's';
+    $sql .= " AND u.college = :college";
+    $params['college'] = $filter_college;
 }
 if ($filter_dept !== '') {
-    $sql .= " AND u.department = ?";
-    $params[] = $filter_dept;
-    $types .= 's';
+    $sql .= " AND u.department = :dept";
+    $params['dept'] = $filter_dept;
 }
 if ($filter_year !== '') {
-    $sql .= " AND sc.ac_year = ?";
-    $params[] = $filter_year;
-    $types .= 's';
+    $sql .= " AND sc.ac_year = :ac_year";
+    $params['ac_year'] = $filter_year;
 }
 if ($search !== '') {
-    $sql .= " AND (sc.student_id LIKE ? OR u.firstname LIKE ? OR u.father_name LIKE ?)";
-    $like = "%$search%";
-    $params[] = $like;
-    $params[] = $like;
-    $params[] = $like;
-    $types .= 'sss';
+    $sql .= " AND (sc.student_id LIKE :search OR u.firstname LIKE :search OR u.father_name LIKE :search)";
+    $params['search'] = "%$search%";
 }
 
 $sql .= " ORDER BY sc.student_id ASC, sc.ac_year DESC, sc.semester DESC, sc.course_code ASC";
 
-$stmt = $conn->prepare($sql);
-if (!empty($params)) {
-    $stmt->bind_param($types, ...$params);
+try {
+    $stmt = $conn->prepare($sql);
+    $stmt->execute($params);
+    $grades = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $grades = [];
 }
-$stmt->execute();
-$grades = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-$stmt->close();
 
 /* ============================================================
    STEP 5 — ATTACH SGPA + CGPA TO EACH ROW
@@ -191,7 +174,7 @@ unset($g);
 $total_rows = count($grades);
 
 /* ============================================================
-   LOAD HEADER (opens <div class="main-content">)
+   LOAD HEADER
    ============================================================ */
 include 'header.php';
 
@@ -202,6 +185,7 @@ define('FROM_MYGRADEVIEW', true);
 include 'mygradeviewf.php';
 
 /* ============================================================
-   LOAD FOOTER (closes </div>)
+   LOAD FOOTER
    ============================================================ */
 include 'footer.php';
+?>

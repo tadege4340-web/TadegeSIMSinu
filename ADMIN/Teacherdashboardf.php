@@ -1,3 +1,16 @@
+<?php
+session_start();
+require 'db.php'; // Good practice to require this in case you need it later
+
+// Security Check: Only allow teachers
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'teacher') {
+    header("Location: loginf.php");
+    exit();
+}
+
+// Get the display name safely
+$display_name = $_SESSION['full_name'] ?? 'Teacher';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,7 +23,8 @@
 
     <header class="teacher-header">
         <div class="header-logo">
-            <img src="/phplab/ADMIN/logoinu.jpg" alt="Injibara University Logo">
+            <!-- FIXED: Removed /phplab/ADMIN/ -->
+            <img src="logoinu.jpg" alt="Injibara University Logo">
         </div>
         <div class="header-title">
             <h1>INJIBARA UNIVERSITY</h1>
@@ -19,9 +33,9 @@
     </header>
 
     <div class="welcome-bar">
-        <span class="welcome-role"></span>
+        <span class="welcome-role">Teacher</span>
         <span class="welcome-text">
-            Welcome, <?= $display_name ?>!
+            Welcome, <?= htmlspecialchars($display_name) ?>!
         </span>
     </div>
 

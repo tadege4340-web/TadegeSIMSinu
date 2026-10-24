@@ -15,26 +15,28 @@ $message_type = "";
 $teacher_username = $_SESSION['username'] ?? '';
 $teacher_user_id = $_SESSION['user_id'] ?? 0;
 
-// Fetch Assigned Courses for this Teacher
+// Fetch Assigned Courses for this Teacher (PDO)
 $my_courses = [];
-if ($role === 'teacher') {
-    $stmt = $conn->prepare("
-        SELECT c.course_id, c.course_code, c.course_name, c.course_year, c.course_semester 
-        FROM addcourse c
-        JOIN teacher_courses tc ON c.course_id = tc.course_id
-        WHERE tc.teacher_id = ?
-    ");
-    $stmt->bind_param("i", $teacher_user_id);
-    $stmt->execute();
-    $res = $stmt->get_result();
-    while ($row = $res->fetch_assoc()) { $my_courses[] = $row; }
-    $stmt->close();
-} else {
-    $res = $conn->query("SELECT course_id, course_code, course_name, course_year, course_semester FROM addcourse");
-    while ($row = $res->fetch_assoc()) { $my_courses[] = $row; }
+try {
+    if ($role === 'teacher') {
+        $stmt = $conn->prepare("
+            SELECT c.course_id, c.course_code, c.course_name, c.course_year, c.course_semester 
+            FROM addcourse c
+            JOIN teacher_courses tc ON c.course_id = tc.course_id
+            WHERE tc.teacher_id = :tid
+        ");
+        $stmt->execute(['tid' => $teacher_user_id]);
+        $my_courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } else {
+        $stmt = $conn->query("SELECT course_id, course_code, course_name, course_year, course_semester FROM addcourse");
+        $my_courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+} catch (PDOException $e) {
+    $message = "Error loading courses: " . $e->getMessage();
+    $message_type = "error";
 }
 
-// 2. Handle Grade Submission
+// 2. Handle Grade Submission (PDO)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_grades') {
     $course_code = trim($_POST['course_code'] ?? '');
     $semester    = (int)($_POST['semester']   ?? 0);
@@ -45,24 +47,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_
         $message_type = "error";
     } else {
         $saved = 0; $skipped = 0; $locked = 0;
-        $conn->begin_transaction();
-
+        
         try {
+            $conn->beginTransaction();
+
             foreach ($grades as $student_id => $data) {
                 $grade = strtoupper(trim($data['grade'] ?? ''));
                 $gp    = (float)($data['gp'] ?? 0);
 
                 if ($grade === '') { $skipped++; continue; }
 
-                $chk = $conn->prepare("SELECT id, grade_status FROM student_courses WHERE student_id = ? AND course_code = ? LIMIT 1");
-                $chk->bind_param("ss", $student_id, $course_code);
-                $chk->execute();
-                $existing = $chk->get_result()->fetch_assoc();
-                $chk->close();
+                // Check if record exists
+                $chk = $conn->prepare("SELECT id, grade_status FROM student_courses WHERE student_id = :sid AND course_code = :cc LIMIT 1");
+                $chk->execute(['sid' => $student_id, 'cc' => $course_code]);
+                $existing = $chk->fetch(PDO::FETCH_ASSOC);
 
                 if (!$existing) { $skipped++; continue; }
 
-                // 🔥 BACKEND LOCK RULE
+                // BACKEND LOCK RULE
                 if (in_array($existing['grade_status'] ?? 'Pending', ['Approved', 'Locked'])) {
                     $locked++; continue;
                 }
@@ -81,52 +83,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_
 
                 $status = ($gp >= 2.00) ? 'Pass' : 'Fail';
 
-                $upd = $conn->prepare("UPDATE student_courses SET grade = ?, grade_point = ?, status = ?, grade_status = 'Pending', last_edited_at = NOW(), last_edited_by = ? WHERE id = ?");
-                $upd->bind_param("sdssi", $grade, $gp, $status, $teacher_username, $existing['id']);
+                $upd = $conn->prepare("UPDATE student_courses SET grade = :grade, grade_point = :gp, status = :status, grade_status = 'Pending', last_edited_at = NOW(), last_edited_by = :edited_by WHERE id = :id");
+                $upd->execute([
+                    'grade' => $grade, 
+                    'gp' => $gp, 
+                    'status' => $status, 
+                    'edited_by' => $teacher_username, 
+                    'id' => $existing['id']
+                ]);
 
-                if ($upd->execute()) $saved++;
+                if ($upd->rowCount() > 0) $saved++;
                 else $skipped++;
-                $upd->close();
             }
 
             $conn->commit();
             $message = "✅ <strong>Grades saved!</strong><br>• Saved: <b>$saved</b><br>• Skipped: <b>$skipped</b><br>" . ($locked > 0 ? "• Locked (Already Approved): <b>$locked</b>" : "");
             $message_type = "success";
         } catch (Exception $e) {
-            $conn->rollback();
+            $conn->rollBack();
             $message = "❌ Error: " . htmlspecialchars($e->getMessage());
             $message_type = "error";
         }
     }
 }
 
-// 3. Handle Filters to Load Students
+// 3. Handle Filters to Load Students (PDO)
 $f_course_id = (int)($_GET['course_id'] ?? 0);
-
 $students_with_grades = [];
 
 if ($f_course_id > 0) {
-    $stmt_c = $conn->prepare("SELECT course_code FROM addcourse WHERE course_id = ?");
-    $stmt_c->bind_param("i", $f_course_id);
-    $stmt_c->execute();
-    $c_info = $stmt_c->get_result()->fetch_assoc();
-    $target_code = $c_info['course_code'] ?? '';
-    $stmt_c->close();
+    try {
+        // Get the course code first
+        $stmt_c = $conn->prepare("SELECT course_code FROM addcourse WHERE course_id = :cid");
+        $stmt_c->execute(['cid' => $f_course_id]);
+        $c_info = $stmt_c->fetch(PDO::FETCH_ASSOC);
+        $target_code = $c_info['course_code'] ?? '';
 
-    $stmt = $conn->prepare("
-        SELECT u.student_id, u.firstname, u.father_name,
-               sc.id AS enrollment_id, sc.grade, sc.grade_point,
-               sc.grade_status, sc.reg_type
-        FROM student_courses sc
-        JOIN users2 u ON u.student_id = sc.student_id
-        WHERE sc.course_id = ? OR sc.course_code = ?
-        ORDER BY u.firstname ASC
-    ");
-    $stmt->bind_param("is", $f_course_id, $target_code);
-    $stmt->execute();
-    $res = $stmt->get_result();
-    while ($row = $res->fetch_assoc()) { $students_with_grades[] = $row; }
-    $stmt->close();
+        // Fetch students with grades
+        $stmt = $conn->prepare("
+            SELECT u.student_id, u.firstname, u.father_name,
+                   sc.id AS enrollment_id, sc.grade, sc.grade_point,
+                   sc.grade_status, sc.reg_type
+            FROM student_courses sc
+            JOIN users2 u ON u.student_id = sc.student_id
+            WHERE sc.course_id = :cid OR sc.course_code = :ccode
+            ORDER BY u.firstname ASC
+        ");
+        $stmt->execute(['cid' => $f_course_id, 'ccode' => $target_code]);
+        $students_with_grades = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        $message = "Error loading students: " . $e->getMessage();
+        $message_type = "error";
+    }
 }
 
 include 'Teacheraddgradef.php';

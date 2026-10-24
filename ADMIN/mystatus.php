@@ -12,24 +12,29 @@ require 'db.php';
 $student_id = $_SESSION['student_id'] ?? '';
 
 /* ============================================================
-   STEP 1 — GET ALL SEMESTERS (with approved grades only)
+   STEP 1 — GET ALL SEMESTERS (with approved grades only) (PDO)
    ============================================================ */
-$stmt = $conn->prepare("
-    SELECT DISTINCT ac_year, semester
-    FROM student_courses
-    WHERE student_id = ?
-      AND ac_year IS NOT NULL
-      AND semester IS NOT NULL
-      AND grade_status = 'Approved'
-    ORDER BY ac_year ASC, semester ASC
-");
-$stmt->bind_param("s", $student_id);
-$stmt->execute();
-$semesters = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-$stmt->close();
+$semesters = [];
+if ($student_id) {
+    try {
+        $stmt = $conn->prepare("
+            SELECT DISTINCT ac_year, semester
+            FROM student_courses
+            WHERE student_id = :sid
+              AND ac_year IS NOT NULL
+              AND semester IS NOT NULL
+              AND grade_status = 'Approved'
+            ORDER BY ac_year ASC, semester ASC
+        ");
+        $stmt->execute(['sid' => $student_id]);
+        $semesters = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        // Handle error silently or display a message
+    }
+}
 
 /* ============================================================
-   STEP 2 — CALCULATE SGPA + CGPA FOR EACH SEMESTER
+   STEP 2 — CALCULATE SGPA + CGPA FOR EACH SEMESTER (PDO)
    ============================================================ */
 $rows = [];
 $running_points  = 0;
@@ -38,26 +43,32 @@ $sem_count       = 0;
 
 foreach ($semesters as $sem) {
 
-    $stmt = $conn->prepare("
-        SELECT 
-            sc.grade,
-            sc.grade_point,
-            sc.reg_date,
-            sc.remark,
-            sc.reg_type,
-            a.credit_hour
-        FROM student_courses sc
-        INNER JOIN addcourse a ON a.course_code = sc.course_code
-        WHERE sc.student_id = ?
-          AND sc.ac_year = ?
-          AND sc.semester = ?
-          AND sc.grade_point IS NOT NULL
-          AND sc.grade_status = 'Approved'
-    ");
-    $stmt->bind_param("ssi", $student_id, $sem['ac_year'], $sem['semester']);
-    $stmt->execute();
-    $grades = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-    $stmt->close();
+    try {
+        $stmt = $conn->prepare("
+            SELECT 
+                sc.grade,
+                sc.grade_point,
+                sc.reg_date,
+                sc.remark,
+                sc.reg_type,
+                a.credit_hour
+            FROM student_courses sc
+            INNER JOIN addcourse a ON a.course_code = sc.course_code
+            WHERE sc.student_id = :sid
+              AND sc.ac_year = :ac_year
+              AND sc.semester = :semester
+              AND sc.grade_point IS NOT NULL
+              AND sc.grade_status = 'Approved'
+        ");
+        $stmt->execute([
+            'sid' => $student_id, 
+            'ac_year' => $sem['ac_year'], 
+            'semester' => $sem['semester']
+        ]);
+        $grades = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        $grades = [];
+    }
 
     $sem_points  = 0;
     $sem_credits = 0;
@@ -109,3 +120,4 @@ foreach ($semesters as $sem) {
    LOAD VIEW
    ============================================================ */
 include 'mystatusf.php';
+?>

@@ -1,45 +1,6 @@
 <?php
 require 'db.php';
 
-// ====== STEP 0: SAFE COLUMN CHECK ======
-function columnExists($conn, $table, $column) {
-    $table  = mysqli_real_escape_string($conn, $table);
-    $column = mysqli_real_escape_string($conn, $column);
-    $res = mysqli_query($conn, "SHOW COLUMNS FROM `$table` LIKE '$column'");
-    return $res && mysqli_num_rows($res) > 0;
-}
-
-// Create table if it doesn't exist
-$createSQL = "
-CREATE TABLE IF NOT EXISTS teachers (
-    id              VARCHAR(20)  NOT NULL PRIMARY KEY,
-    user_id         VARCHAR(20)  DEFAULT NULL,
-    full_name       VARCHAR(150) NOT NULL,
-    age             INT          NOT NULL,
-    gender          ENUM('Male','Female') NOT NULL,
-    email           VARCHAR(100) NOT NULL UNIQUE,
-    phone           VARCHAR(20),
-    address         VARCHAR(255),
-    college         VARCHAR(20)  DEFAULT NULL,
-    department      VARCHAR(100),
-    qualification   VARCHAR(50),
-    position        VARCHAR(100),
-    hire_date       DATE,
-    status          ENUM('Active','On Leave','Retired') DEFAULT 'Active',
-    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)";
-
-if (!mysqli_query($conn, $createSQL)) {
-    die("Table creation failed: " . mysqli_error($conn));
-}
-
-if (!columnExists($conn, 'teachers', 'college')) {
-    mysqli_query($conn, "ALTER TABLE teachers ADD COLUMN college VARCHAR(20) DEFAULT NULL AFTER address");
-}
-if (!columnExists($conn, 'teachers', 'user_id')) {
-    mysqli_query($conn, "ALTER TABLE teachers ADD COLUMN user_id VARCHAR(20) DEFAULT NULL AFTER id");
-}
-
 // ====== STEP 1: HANDLE FORM SUBMISSION (INSERT) ======
 $error = "";
 
@@ -55,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $department    = $_POST['department'] ?? '';
     $qualification = $_POST['qualification'] ?? '';
     $position      = $_POST['position'] ?? '';
-    $hire_date     = !empty($_POST['hire_date']) ? $_POST['hire_date'] : NULL;
+    $hire_date     = !empty($_POST['hire_date']) ? $_POST['hire_date'] : null;
     $status        = $_POST['status'] ?? 'Active';
 
     // Validation
@@ -64,55 +25,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($department === '') {
         $error = "Please select a department.";
     } else {
+        try {
+            // ====== DUPLICATE CHECK (PDO) ======
+            $duplicates = [];
 
-        // ====== DUPLICATE CHECK ======
-        $duplicates = [];
+            $c = $conn->prepare("SELECT id FROM teachers WHERE id = :id");
+            $c->execute(['id' => $id]);
+            if ($c->fetch()) $duplicates[] = "ID";
 
-        $c = mysqli_prepare($conn, "SELECT id FROM teachers WHERE id = ?");
-        mysqli_stmt_bind_param($c, "s", $id);
-        mysqli_stmt_execute($c);
-        mysqli_stmt_store_result($c);
-        if (mysqli_stmt_num_rows($c) > 0) $duplicates[] = "ID";
-        mysqli_stmt_close($c);
+            $c = $conn->prepare("SELECT id FROM teachers WHERE email = :email");
+            $c->execute(['email' => $email]);
+            if ($c->fetch()) $duplicates[] = "Email";
 
-        $c = mysqli_prepare($conn, "SELECT id FROM teachers WHERE email = ?");
-        mysqli_stmt_bind_param($c, "s", $email);
-        mysqli_stmt_execute($c);
-        mysqli_stmt_store_result($c);
-        if (mysqli_stmt_num_rows($c) > 0) $duplicates[] = "Email";
-        mysqli_stmt_close($c);
+            if ($phone !== '') {
+                $c = $conn->prepare("SELECT id FROM teachers WHERE phone = :phone");
+                $c->execute(['phone' => $phone]);
+                if ($c->fetch()) $duplicates[] = "Phone";
+            }
 
-        if ($phone !== '') {
-            $c = mysqli_prepare($conn, "SELECT id FROM teachers WHERE phone = ?");
-            mysqli_stmt_bind_param($c, "s", $phone);
-            mysqli_stmt_execute($c);
-            mysqli_stmt_store_result($c);
-            if (mysqli_stmt_num_rows($c) > 0) $duplicates[] = "Phone";
-            mysqli_stmt_close($c);
-        }
+            if (!empty($duplicates)) {
+                $list  = implode(", ", $duplicates);
+                $error = "The following field(s) already exist: $list. Please use different values.";
+            } else {
+                
+                // ====== INSERT TEACHER INTO TEACHERS TABLE (PDO) ======
+                $stmt = $conn->prepare(
+                    "INSERT INTO teachers 
+                     (id, user_id, full_name, age, gender, email, phone, address,
+                      college, department, qualification, position, hire_date, status) 
+                     VALUES (:id, :user_id, :full_name, :age, :gender, :email, :phone, :address,
+                             :college, :department, :qualification, :position, :hire_date, :status)"
+                );
 
-        if (!empty($duplicates)) {
-            $list  = implode(", ", $duplicates);
-            $error = "The following field(s) already exist: $list. Please use different values.";
-        } else {
-            
-            // ====== INSERT TEACHER INTO TEACHERS TABLE ======
-            $stmt = mysqli_prepare($conn,
-                "INSERT INTO teachers 
-                 (id, user_id, full_name, age, gender, email, phone, address,
-                  college, department, qualification, position, hire_date, status) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-            );
-
-            mysqli_stmt_bind_param($stmt, "sssissssssssss",
-                $id, $id, $full_name, $age, $gender, $email, $phone, $address,
-                $college, $department, $qualification, $position, $hire_date, $status
-            );
-
-            if (mysqli_stmt_execute($stmt)) {
+                $stmt->execute([
+                    'id' => $id, 'user_id' => $id, 'full_name' => $full_name, 'age' => $age,
+                    'gender' => $gender, 'email' => $email, 'phone' => $phone, 'address' => $address,
+                    'college' => $college, 'department' => $department, 'qualification' => $qualification,
+                    'position' => $position, 'hire_date' => $hire_date, 'status' => $status
+                ]);
                 
                 // ====================================================
-                // AUTOMATICALLY CREATE LOGIN ACCOUNT
+                // AUTOMATICALLY CREATE LOGIN ACCOUNT (PDO)
                 // ====================================================
                 
                 // Extract Grandfather's Name (The LAST word of the full name)
@@ -128,28 +81,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $role = 'teacher';
                 
                 // Insert into the users table (Username is the ID)
-                $u_stmt = mysqli_prepare($conn, 
-                    "INSERT INTO users (id, username, password, full_name, role, must_change_password) 
-                     VALUES (?, ?, ?, ?, ?, 1)"
+                $u_stmt = $conn->prepare(
+                    "INSERT INTO users (username, password, full_name, role, must_change_password) 
+                     VALUES (:username, :password, :full_name, :role, 1)"
                 );
-                mysqli_stmt_bind_param($u_stmt, "sssss", $id, $id, $hashed_password, $full_name, $role);
-                mysqli_stmt_execute($u_stmt);
-                mysqli_stmt_close($u_stmt);
+                
+                $u_stmt->execute([
+                    'username' => $id,
+                    'password' => $hashed_password,
+                    'full_name' => $full_name,
+                    'role' => $role
+                ]);
                 
                 // ====================================================
 
                 header("Location: " . $_SERVER['PHP_SELF'] . "?msg=registered");
                 exit;
-            } else {
-                $error = "Database error: " . mysqli_stmt_error($stmt);
             }
+        } catch (PDOException $e) {
+            $error = "Database error: " . $e->getMessage();
         }
     }
 }
 
 // ====== STEP 2: FETCH TEACHERS ======
 include 'header.php';
-$result = mysqli_query($conn, "SELECT * FROM teachers ORDER BY id ASC");
+
+$stmt = $conn->query("SELECT * FROM teachers ORDER BY id ASC");
+$teachers = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <h2 style="text-align:center; color:#2c3e50;">Registered Teachers</h2>

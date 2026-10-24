@@ -7,20 +7,18 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     exit();
 }
 
-/* ============ LOAD COLLEGES FROM DB ============ */
+/* ============ LOAD COLLEGES FROM DB (PDO) ============ */
 $colleges = [];
-$result = mysqli_query($conn, "SELECT code, name FROM college ORDER BY id");
-if ($result) {
-    while ($row = mysqli_fetch_assoc($result)) {
-        $colleges[] = $row;
-    }
+$stmt = $conn->query("SELECT code, name FROM college ORDER BY id");
+if ($stmt) {
+    $colleges = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-/* ============ LOAD ALL DEPARTMENTS (grouped by college) ============ */
+/* ============ LOAD ALL DEPARTMENTS (PDO) ============ */
 $departments_by_college = [];
-$result = mysqli_query($conn, "SELECT college_code, name FROM departments ORDER BY name");
-if ($result) {
-    while ($row = mysqli_fetch_assoc($result)) {
+$stmt = $conn->query("SELECT college_code, name FROM departments ORDER BY name");
+if ($stmt) {
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $departments_by_college[$row['college_code']][] = $row['name'];
     }
 }

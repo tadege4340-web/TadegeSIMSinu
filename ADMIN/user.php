@@ -3,27 +3,29 @@ session_start();
 
 // Check if user is logged in
 if (!isset($_SESSION['student_id'])) {
-    header("Location: login.php");
+    header("Location: loginf.php"); // Changed to loginf.php to match your file
     exit();
 }
 
 require 'db.php';
 
-// ============ GET FULL NAME (FIRST + FATHER) ============
+// ============ GET FULL NAME (FIRST + FATHER) - PDO ============
 $student_id  = $_SESSION['student_id'];
 $firstname   = '';
 $father_name = '';
 
-$stmt = $conn->prepare("SELECT firstname, father_name FROM users2 WHERE student_id = ? LIMIT 1");
-$stmt->bind_param("s", $student_id);
-$stmt->execute();
-$name_result = $stmt->get_result();
+try {
+    $stmt = $conn->prepare("SELECT firstname, father_name FROM users2 WHERE student_id = :sid LIMIT 1");
+    $stmt->execute(['sid' => $student_id]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-if ($row = $name_result->fetch_assoc()) {
-    $firstname   = $row['firstname']   ?? '';
-    $father_name = $row['father_name'] ?? '';
+    if ($row) {
+        $firstname   = $row['firstname']   ?? '';
+        $father_name = $row['father_name'] ?? '';
+    }
+} catch (PDOException $e) {
+    // Handle error silently
 }
-$stmt->close();
 
 // Build display name
 $full_name = trim($firstname . ' ' . $father_name);

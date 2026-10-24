@@ -10,62 +10,56 @@ $hod_department = trim($_SESSION['department'] ?? '');
 $hod_college    = trim($_SESSION['college'] ?? '');
 
 // Get Filters
-$filter_year  = $_GET['year'] ?? '';
-$filter_semester = $_GET['semester'] ?? ''; // 🔥 ADDED
-$search_query = trim($_GET['search'] ?? '');
+$filter_year     = $_GET['year'] ?? '';
+$filter_semester = $_GET['semester'] ?? ''; 
+$search_query    = trim($_GET['search'] ?? '');
 
-// Build Query
-$sql = "SELECT student_id, firstname, father_name, gender, year, current_semester 
+// Build Query (PDO)
+$sql = "SELECT student_id, firstname, father_name, gender, `year`, current_semester 
         FROM users2 
         WHERE 1=1";
+        
 $params = [];
-$types  = "";
 
 // Filter by Department for Head
 if ($_SESSION['role'] !== 'admin' && $hod_department !== '') {
-    $sql .= " AND department = ?";
-    $params[] = $hod_department;
-    $types .= "s";
+    $sql .= " AND department = :dept";
+    $params['dept'] = $hod_department;
 }
 
 // Filter by Year
 if ($filter_year !== '') {
-    $sql .= " AND year = ?";
-    $params[] = $filter_year;
-    $types .= "i";
+    $sql .= " AND `year` = :year";
+    $params['year'] = $filter_year;
 }
 
-// 🔥 Filter by Semester
+// Filter by Semester
 if ($filter_semester !== '') {
-    $sql .= " AND current_semester = ?";
-    $params[] = $filter_semester;
-    $types .= "i";
+    $sql .= " AND current_semester = :sem";
+    $params['sem'] = $filter_semester;
 }
 
 // Search
 if ($search_query !== '') {
-    $sql .= " AND (student_id LIKE ? OR firstname LIKE ? OR father_name LIKE ?)";
+    $sql .= " AND (student_id LIKE :search1 OR firstname LIKE :search2 OR father_name LIKE :search3)";
     $search_like = "%$search_query%";
-    $params[] = $search_like;
-    $params[] = $search_like;
-    $params[] = $search_like;
-    $types .= "sss";
+    $params['search1'] = $search_like;
+    $params['search2'] = $search_like;
+    $params['search3'] = $search_like;
 }
 
-$sql .= " ORDER BY year ASC, firstname ASC";
-
-$stmt = $conn->prepare($sql);
-if ($types !== '') {
-    $stmt->bind_param($types, ...$params);
-}
-$stmt->execute();
-$result = $stmt->get_result();
+$sql .= " ORDER BY `year` ASC, firstname ASC";
 
 $students = [];
-while ($row = $result->fetch_assoc()) {
-    $students[] = $row;
-}
-$stmt->close();
 
+try {
+    $stmt = $conn->prepare($sql);
+    $stmt->execute($params);
+    $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $db_error = $e->getMessage();
+}
+
+// Load the View
 include 'Headviewstudentf.php';
 ?>

@@ -1,88 +1,58 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reset Password — Injibara University</title>
-    <link rel="stylesheet" href="passsword_reset.css">
-</head>
-<body>
+<?php
+session_start();
+require 'db.php';
 
-    <!-- ============ UNIVERSITY HEADER ============ -->
-    <div class="header">
-        <div class="logo">
-            <img src="logoinu.jpg" alt="Injibara University Logo">
-        </div>
-        <div class="title">
-            <h1>INJIBARA UNIVERSITY<br>STUDENT INFORMATION MANAGEMENT SYSTEM</h1>
-        </div>
-    </div>
+$message = "";
+$message_type = "";
+$reset_link = "";
 
-    <!-- ============ PAGE CONTENT ============ -->
-    <div class="page-wrapper">
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $username = trim($_POST['username'] ?? '');
 
-        <!-- Page title -->
-        
+    if ($username === '') {
+        $message = "❌ Please enter your username.";
+        $message_type = "error";
+    } else {
+        try {
+            // 1. Check if the user exists (PDO)
+            $stmt = $conn->prepare("SELECT id, email FROM users WHERE username = :username LIMIT 1");
+            $stmt->execute(['username' => $username]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        <!-- Info box -->
-        <div class="info-box">
-            If you forgot your password an email with a password reset link will be sent to you.
-            Click on the link in that email and you will be taken to a page where you can then
-            create a new password.
-        </div>
+            if ($user) {
+                // 2. Generate a secure token
+                $token = bin2hex(random_bytes(32));
+                $expires = date('Y-m-d H:i:s', strtotime('+1 hour'));
 
-        <!-- Success message -->
-        <?php if (!empty($message) && $message_type === 'success'): ?>
-            <div class="alert alert-success">
-                <?= $message ?>
+                // 3. Save the token in the database
+                $update = $conn->prepare("UPDATE users SET reset_token = :token, reset_expires = :expires WHERE id = :id");
+                $update->execute([
+                    'token' => $token,
+                    'expires' => $expires,
+                    'id' => $user['id']
+                ]);
 
-                <?php if (!empty($reset_link)): ?>
-                    <div class="reset-link-box">
-                        <a href="<?= htmlspecialchars($reset_link) ?>">
-                            <?= htmlspecialchars($reset_link) ?>
-                        </a>
-                    </div>
-                    <small class="reset-note">
-                        ⓘ In production, this link would be emailed to the user.
-                    </small>
-                <?php endif; ?>
-            </div>
-        <?php endif; ?>
+                // 4. Create the reset link
+                // Note: Change this to your real live URL
+                $reset_link = "https://tadegesimsinu.onrender.com/reset_password_confirm.php?token=" . $token;
 
-        <!-- Error message -->
-        <?php if (!empty($message) && $message_type === 'error'): ?>
-            <div class="alert alert-error">
-                <?= $message ?>
-            </div>
-        <?php endif; ?>
+                $message = "✅ A password reset link has been generated for <b>" . htmlspecialchars($username) . "</b>.";
+                $message_type = "success";
 
-        <!-- Form -->
-        <form method="POST" class="reset-form" id="resetForm">
+                // In a real app, you would send an email here using PHPMailer or mail()
+                // mail($user['email'], "Password Reset", "Click here: $reset_link");
 
-            <div class="form-row">
-                <label for="username">
-                    User Name:
-                    <span class="info-icon" title="Enter the username you used to register">ℹ️</span>
-                </label>
-                <input type="text" id="username" name="username"
-                       value="<?= htmlspecialchars($_POST['username'] ?? '') ?>"
-                       required autofocus>
-            </div>
-
-            <div class="btn-row">
-                <button type="submit" class="btn btn-send">Send Reset Link</button>
-                <button type="button" class="btn btn-cancel" onclick="goBack()">Cancel</button>
-            </div>
-
-        </form>
-
-    </div>
-
-    <script>
-    function goBack() {
-        window.location.href = 'loginf.php';
+            } else {
+                $message = "❌ No user found with that username.";
+                $message_type = "error";
+            }
+        } catch (PDOException $e) {
+            $message = "❌ Database Error: " . $e->getMessage();
+            $message_type = "error";
+        }
     }
-    </script>
+}
 
-</body>
-</html>
+// Load the HTML form
+include 'password_resetf.php';
+?>

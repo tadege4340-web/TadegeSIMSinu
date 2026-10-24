@@ -1,190 +1,206 @@
-<!-- mygradeapprovef.php -->
+<?php
+/* ============================================================
+   REGISTRAR — GRADE APPROVALS (LOGIC) - PDO Version
+   ============================================================ */
 
-<div class="container mt-4">
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require 'db.php';
 
-    <!-- HEADER -->
-    <div class="approve-header">
-        <h2>📋 Grade Approvals — Registrar</h2>
-        <p>Review, approve, or return submitted grades from teachers</p>
-    </div>
-
-    <!-- MESSAGE -->
-    <?php if ($message): ?>
-        <div class="alert alert-<?= $message_type === 'success' ? 'success' : 'error' ?>">
-            <?= $message ?>
-        </div>
-    <?php endif; ?>
-
-    <!-- FILTERS -->
-    <form method="get" class="approve-filters">
-        <select name="college" onchange="this.form.submit()">
-            <option value="">All Colleges</option>
-            <?php foreach ($colleges as $c): ?>
-                <option value="<?= htmlspecialchars($c['code']) ?>"
-                    <?= $f_college === $c['code'] ? 'selected' : '' ?>>
-                    <?= htmlspecialchars($c['name']) ?>
-                </option>
-            <?php endforeach; ?>
-        </select>
-
-        <select name="department" onchange="this.form.submit()">
-            <option value="">All Departments</option>
-            <?php foreach ($departments as $d): ?>
-                <option value="<?= htmlspecialchars($d) ?>"
-                    <?= $f_department === $d ? 'selected' : '' ?>>
-                    <?= htmlspecialchars($d) ?>
-                </option>
-            <?php endforeach; ?>
-        </select>
-
-        <input type="number" name="year" placeholder="Year"
-               value="<?= $f_year ?: '' ?>">
-
-        <button type="submit" class="btn-filter">Filter</button>
-    </form>
-
-    <!-- TABLE OR EMPTY STATE -->
-    <?php if (empty($submittedGroups)): ?>
-
-        <div class="empty-state">
-            <div class="es-icon">📭</div>
-            <h3>No submitted grades awaiting approval</h3>
-            <p>When teachers submit grades, they will appear here.</p>
-        </div>
-
-    <?php else: ?>
-
-        <div class="approve-table-wrap">
-            <table class="approve-table">
-                <thead>
-                    <tr>
-                        <th>Course</th>
-                        <th>Year</th>
-                        <th>Sem</th>
-                        <th>Dept</th>
-                        <th>Total</th>
-                        <th>Graded</th>
-                        <th>Submitted By</th>
-                        <th>Submitted At</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($submittedGroups as $g): ?>
-                    <tr>
-                        <td>
-                            <span class="course-code-cell">
-                                <?= htmlspecialchars($g['course_code']) ?>
-                            </span><br>
-                            <small><?= htmlspecialchars($g['course_name']) ?></small>
-                        </td>
-                        <td><?= htmlspecialchars($g['ac_year']) ?></td>
-                        <td class="center"><?= htmlspecialchars($g['semester']) ?></td>
-                        <td><?= htmlspecialchars($g['department'] ?? '-') ?></td>
-                        <td class="center"><?= (int)$g['total'] ?></td>
-                        <td class="center"><?= (int)$g['graded'] ?></td>
-                        <td>
-                            <span class="submitted-by-badge">
-                                <?= htmlspecialchars($g['submitted_by'] ?? '-') ?>
-                            </span>
-                        </td>
-                        <td class="date-cell">
-                            <?= htmlspecialchars($g['submitted_at'] ?? '-') ?>
-                        </td>
-
-                        <!-- ACTION COLUMN — Approve + Reject side-by-side -->
-                        <td class="action-col">
-                            <form method="post" class="action-form">
-                                <input type="hidden" name="course_code"
-                                       value="<?= htmlspecialchars($g['course_code']) ?>">
-                                <input type="hidden" name="ac_year"
-                                       value="<?= htmlspecialchars($g['ac_year']) ?>">
-                                <input type="hidden" name="semester"
-                                       value="<?= (int)$g['semester'] ?>">
-                                <input type="hidden" name="reason"
-                                       value="" id="reason_<?= md5($g['course_code'].$g['ac_year'].$g['semester']) ?>">
-
-                                <button type="submit" name="action" value="approve"
-                                        class="btn-approve"
-                                        onclick="return confirm('Approve all grades for this course?')">
-                                    ✅ Approve
-                                </button>
-
-                                <button type="button"
-                                        class="btn-reject"
-                                        onclick="rejectWithReason(
-                                            '<?= htmlspecialchars($g['course_code'], ENT_QUOTES) ?>',
-                                            '<?= htmlspecialchars($g['ac_year'], ENT_QUOTES) ?>',
-                                            '<?= (int)$g['semester'] ?>'
-                                        )">
-                                    ↩️ Reject
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-
-    <?php endif; ?>
-</div>
-
-<!-- ============================================================
-     REJECT REASON MODAL
-     ============================================================ -->
-<div id="rejectModal" class="reject-modal-overlay">
-    <div class="reject-modal-box">
-        <h3>↩️ Return Grades to Teacher</h3>
-        <p id="rejectCourseInfo" class="reject-course-info"></p>
-
-        <form method="post" id="rejectForm">
-            <input type="hidden" name="action" value="reject">
-            <input type="hidden" name="course_code" id="rej_course_code">
-            <input type="hidden" name="ac_year"     id="rej_ac_year">
-            <input type="hidden" name="semester"    id="rej_semester">
-
-            <label for="rej_reason"><strong>Reason for rejection:</strong></label>
-            <textarea name="reason" id="rej_reason" required
-                      placeholder="Explain why these grades are being returned..."></textarea>
-
-            <div class="reject-modal-actions">
-                <button type="button" class="btn-cancel"
-                        onclick="closeRejectModal()">Cancel</button>
-                <button type="submit" class="btn-confirm-reject">
-                    Confirm Rejection
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- ============================================================
-     MODAL SCRIPT
-     ============================================================ -->
-<script>
-function rejectWithReason(courseCode, acYear, semester) {
-    document.getElementById('rej_course_code').value = courseCode;
-    document.getElementById('rej_ac_year').value     = acYear;
-    document.getElementById('rej_semester').value    = semester;
-    document.getElementById('rejectCourseInfo').textContent =
-        courseCode + ' — ' + acYear + ' — Semester ' + semester;
-    document.getElementById('rejectModal').classList.add('active');
-    setTimeout(() => document.getElementById('rej_reason').focus(), 100);
+/* ============================================================
+   ACCESS CONTROL
+   ============================================================ */
+if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'registrar', 'head'])) {
+    header("Location: loginf.php");
+    exit();
 }
 
-function closeRejectModal() {
-    document.getElementById('rejectModal').classList.remove('active');
-    document.getElementById('rej_reason').value = '';
+$message      = "";
+$message_type = "";
+
+/* ============================================================
+   FILTERS
+   ============================================================ */
+$f_college    = trim($_GET['college']    ?? '');
+$f_department = trim($_GET['department'] ?? '');
+$f_year       = (int)($_GET['year']      ?? 0);
+
+/* ============================================================
+   HANDLE APPROVE / REJECT ACTIONS (PDO)
+   ============================================================ */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    $action      = $_POST['action'];
+    $course_code = trim($_POST['course_code'] ?? '');
+    $ac_year     = trim($_POST['ac_year'] ?? '');
+    $semester    = (int)($_POST['semester'] ?? 0);
+    $reason      = trim($_POST['reason'] ?? '');
+    $registrar   = $_SESSION['username'] ?? 'registrar';
+
+    if ($course_code && $ac_year && $semester) {
+        try {
+            if ($action === 'approve') {
+                // Approve all pending grades for this course
+                $upd = $conn->prepare("
+                    UPDATE student_courses 
+                    SET grade_status = 'Approved', 
+                        approved_at = NOW(), 
+                        approved_by = :approved_by 
+                    WHERE course_code = :ccode 
+                      AND ac_year = :ayear 
+                      AND semester = :sem 
+                      AND grade_status = 'Pending'");
+                $upd->execute([
+                    'approved_by' => $registrar,
+                    'ccode' => $course_code,
+                    'ayear' => $ac_year,
+                    'sem' => $semester
+                ]);
+                
+                $count = $upd->rowCount();
+                $message = "✅ $count grade(s) approved successfully.";
+                $message_type = "success";
+
+                // Log the approval
+                $log = $conn->prepare("
+                    INSERT INTO grade_audit_log 
+                    (student_course_id, student_id, course_code, ac_year, semester, action, action_by, reason)
+                    VALUES (NULL, '*', :ccode, :ayear, :sem, 'approved', :action_by, :reason)");
+                $log->execute([
+                    'ccode' => $course_code,
+                    'ayear' => $ac_year,
+                    'sem' => $semester,
+                    'action_by' => $registrar,
+                    'reason' => "$count grades approved by registrar"
+                ]);
+
+            } elseif ($action === 'reject') {
+                if ($reason === '') {
+                    $message = "⚠️ A reason is required to reject grades.";
+                    $message_type = "error";
+                } else {
+                    // Reject all pending grades for this course
+                    $upd = $conn->prepare("
+                        UPDATE student_courses 
+                        SET grade_status = 'Pending', 
+                            rejection_reason = :reason 
+                        WHERE course_code = :ccode 
+                          AND ac_year = :ayear 
+                          AND semester = :sem 
+                          AND grade_status = 'Pending'");
+                    $upd->execute([
+                        'reason' => $reason,
+                        'ccode' => $course_code,
+                        'ayear' => $ac_year,
+                        'sem' => $semester
+                    ]);
+
+                    $count = $upd->rowCount();
+                    $message = "↩️ $count grade(s) returned to teacher.";
+                    $message_type = "success";
+
+                    // Log the rejection
+                    $log = $conn->prepare("
+                        INSERT INTO grade_audit_log 
+                        (student_course_id, student_id, course_code, ac_year, semester, action, action_by, reason)
+                        VALUES (NULL, '*', :ccode, :ayear, :sem, 'rejected', :action_by, :reason)");
+                    $log->execute([
+                        'ccode' => $course_code,
+                        'ayear' => $ac_year,
+                        'sem' => $semester,
+                        'action_by' => $registrar,
+                        'reason' => $reason
+                    ]);
+                }
+            }
+        } catch (PDOException $e) {
+            $message = "❌ Database Error: " . $e->getMessage();
+            $message_type = "error";
+        }
+    }
 }
 
-// Close modal when clicking the dark overlay
-document.getElementById('rejectModal').addEventListener('click', function(e) {
-    if (e.target === this) closeRejectModal();
-});
+/* ============================================================
+   LOAD COLLEGES (FOR FILTER)
+   ============================================================ */
+$colleges = [];
+try {
+    $r = $conn->query("SELECT code, name FROM college ORDER BY name");
+    $colleges = $r->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {}
 
-// Close modal on Escape key
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeRejectModal();
-});
-</script>
+/* ============================================================
+   LOAD DEPARTMENTS (FOR FILTER)
+   ============================================================ */
+$departments = [];
+try {
+    $sqlD = "SELECT DISTINCT department FROM users2 WHERE department IS NOT NULL AND department <> ''";
+    $paramsD = [];
+    if ($f_college) {
+        $sqlD .= " AND college = :college";
+        $paramsD['college'] = $f_college;
+    }
+    $sqlD .= " ORDER BY department";
+    $stmtD = $conn->prepare($sqlD);
+    $stmtD->execute($paramsD);
+    while ($row = $stmtD->fetch(PDO::FETCH_ASSOC)) {
+        $departments[] = $row['department'];
+    }
+} catch (PDOException $e) {}
+
+/* ============================================================
+   FETCH SUBMITTED GROUPS
+   ============================================================ */
+$submittedGroups = [];
+try {
+    $sql = "
+        SELECT 
+            sc.course_code,
+            a.course_name,
+            sc.ac_year,
+            sc.semester,
+            u.department,
+            COUNT(sc.id) AS total,
+            SUM(CASE WHEN sc.grade_status = 'Pending' THEN 1 ELSE 0 END) AS graded,
+            MAX(sc.submitted_by) AS submitted_by,
+            MAX(sc.submitted_at) AS submitted_at
+        FROM student_courses sc
+        LEFT JOIN addcourse a ON a.course_code = sc.course_code
+        LEFT JOIN users2 u ON u.student_id = sc.student_id
+        WHERE sc.grade_status = 'Pending'
+          AND sc.grade IS NOT NULL
+          AND sc.grade <> ''";
+    
+    $params = [];
+    
+    if ($f_college) {
+        $sql .= " AND u.college = :college";
+        $params['college'] = $f_college;
+    }
+    if ($f_department) {
+        $sql .= " AND u.department = :department";
+        $params['department'] = $f_department;
+    }
+    if ($f_year) {
+        $sql .= " AND a.course_year = :year";
+        $params['year'] = $f_year;
+    }
+    
+    $sql .= " GROUP BY sc.course_code, a.course_name, sc.ac_year, sc.semester, u.department
+              ORDER BY sc.ac_year DESC, sc.semester DESC, sc.course_code ASC";
+    
+    $stmt = $conn->prepare($sql);
+    $stmt->execute($params);
+    $submittedGroups = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+} catch (PDOException $e) {
+    $message = "Error loading grades: " . $e->getMessage();
+}
+
+/* ============================================================
+   LOAD HEADER + VIEW + FOOTER
+   ============================================================ */
+include 'header.php';
+include 'mygradeapprovef.php';
+include 'footer.php';
+?>

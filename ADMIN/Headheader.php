@@ -30,7 +30,8 @@ if ($welcome_name === '') {
     <header class="teacher-header">
         <div class="header-left">
             <div class="header-logo">
-                <img src="/phplab/ADMIN/logoinu.jpg" alt="Injibara University Logo">
+                <!-- FIXED: Removed /phplab/ADMIN/ -->
+                <img src="logoinu.jpg" alt="Injibara University Logo">
             </div>
         </div>
 
@@ -55,7 +56,6 @@ if ($welcome_name === '') {
         <aside class="teacher-sidebar">
             <div class="sidebar-heading"></div>
 
-            <!-- Added target="teacherContent" to all links -->
             <a href="Headdashboard.php" target="teacherContent">
                 <span></span> DASHBOARD
             </a>
@@ -110,6 +110,15 @@ if ($welcome_name === '') {
 
         <!-- MAIN CONTENT (IFRAME) -->
         <main class="teacher-main">
-            <!-- The iframe loads the pages inside -->
             <iframe id="teacherContent" name="teacherContent" src="Headdashboard.php" title="Dashboard Content" loading="eager"></iframe>
         </main>
+    </div>
+
+    <!-- 4. FOOTER (Added Here) -->
+    <footer class="teacher-footer">
+        <p>&copy; <?= date('Y') ?> Injibara University. Student Information Management System.</p>
+        <p>Admin Portal | All Rights Reserved</p>
+    </footer>
+
+</body>
+</html>

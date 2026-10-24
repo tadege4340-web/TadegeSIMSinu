@@ -136,9 +136,9 @@
                 </tr>
             </thead>
             <tbody>
-                <?php if ($result->num_rows > 0): ?>
+                <?php if (!empty($teachers)): ?>
                     <?php $count = 1; ?>
-                    <?php while ($row = $result->fetch_assoc()): ?>
+                    <?php foreach ($teachers as $row): ?>
                         <tr>
                             <td class="center"><?= $count++ ?></td>
                             <td class="mono"><?= htmlspecialchars($row['id']) ?></td>
@@ -169,7 +169,7 @@
                                 </span>
                             </td>
                         </tr>
-                    <?php endwhile; ?>
+                    <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
                         <td colspan="14" class="no-data">

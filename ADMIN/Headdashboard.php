@@ -4,7 +4,8 @@ require 'db.php';
 
 // 1. Security Check
 if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['head', 'admin'])) {
-    header("Location: loginf.php"); exit();
+    header("Location: loginf.php"); 
+    exit();
 }
 
 $hod_department = trim($_SESSION['department'] ?? '');
@@ -18,38 +19,36 @@ $stats = [
     'pending_grades' => 0
 ];
 
-// Total Students in Department
-$stmt = $conn->prepare("SELECT COUNT(*) AS c FROM users2 WHERE department = ?");
-$stmt->bind_param("s", $hod_department);
-$stmt->execute();
-$stats['students'] = $stmt->get_result()->fetch_assoc()['c'];
-$stmt->close();
+try {
+    // Total Students in Department
+    $stmt = $conn->prepare("SELECT COUNT(*) FROM users2 WHERE department = :dept");
+    $stmt->execute(['dept' => $hod_department]);
+    $stats['students'] = (int)$stmt->fetchColumn();
 
-// Total Teachers in Department
-$stmt = $conn->prepare("SELECT COUNT(*) AS c FROM teachers WHERE department = ?");
-$stmt->bind_param("s", $hod_department);
-$stmt->execute();
-$stats['teachers'] = $stmt->get_result()->fetch_assoc()['c'];
-$stmt->close();
+    // Total Teachers in Department
+    $stmt = $conn->prepare("SELECT COUNT(*) FROM teachers WHERE department = :dept");
+    $stmt->execute(['dept' => $hod_department]);
+    $stats['teachers'] = (int)$stmt->fetchColumn();
 
-// Total Courses in Department
-$stmt = $conn->prepare("SELECT COUNT(*) AS c FROM addcourse WHERE department = ?");
-$stmt->bind_param("s", $hod_department);
-$stmt->execute();
-$stats['courses'] = $stmt->get_result()->fetch_assoc()['c'];
-$stmt->close();
+    // Total Courses in Department
+    $stmt = $conn->prepare("SELECT COUNT(*) FROM addcourse WHERE department = :dept");
+    $stmt->execute(['dept' => $hod_department]);
+    $stats['courses'] = (int)$stmt->fetchColumn();
 
-// Pending Grades for Department
-$stmt = $conn->prepare("
-    SELECT COUNT(sc.id) AS c 
-    FROM student_courses sc 
-    JOIN addcourse c ON sc.course_code = c.course_code 
-    WHERE c.department = ? AND sc.grade_status = 'Pending'
-");
-$stmt->bind_param("s", $hod_department);
-$stmt->execute();
-$stats['pending_grades'] = $stmt->get_result()->fetch_assoc()['c'] ?? 0;
-$stmt->close();
+    // Pending Grades for Department
+    $stmt = $conn->prepare("
+        SELECT COUNT(sc.id) 
+        FROM student_courses sc 
+        JOIN addcourse c ON sc.course_code = c.course_code 
+        WHERE c.department = :dept AND sc.grade_status = 'Pending'
+    ");
+    $stmt->execute(['dept' => $hod_department]);
+    $stats['pending_grades'] = (int)$stmt->fetchColumn();
+
+} catch (PDOException $e) {
+    // If there's a database error, stats will stay at 0
+    $db_error = $e->getMessage();
+}
 
 // 3. Load the View
 include 'Headdashboardf.php';

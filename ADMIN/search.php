@@ -20,27 +20,23 @@ if (isset($_POST['search'])) {
     } else {
         $like = '%' . $key . '%';
 
+        // FIXED: Using PDO named parameters
         $sql = "SELECT * FROM users2
-                WHERE student_id        LIKE ?
-                   OR firstname         LIKE ?
-                   OR father_name       LIKE ?
-                   OR grandfather_name  LIKE ?
-                   OR region            LIKE ?
-                   OR secondary_school  LIKE ?
-                   OR department        LIKE ?
+                WHERE student_id        LIKE :key
+                   OR firstname         LIKE :key
+                   OR father_name       LIKE :key
+                   OR grandfather_name  LIKE :key
+                   OR region            LIKE :key
+                   OR secondary_school  LIKE :key
+                   OR department        LIKE :key
                 ORDER BY student_id ASC";
-        $stmt = $conn->prepare($sql);
+                
+        try {
+            $stmt = $conn->prepare($sql);
+            $stmt->execute(['key' => $like]);
+            $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        if (!$stmt) {
-            die("<p style='color:red;'>SQL Error: " . $conn->error . "</p>");
-        }
-
-        $stmt->bind_param("sssssss",
-            $like, $like, $like, $like, $like, $like, $like);
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        if ($result->num_rows > 0):
+            if (count($students) > 0):
 ?>
         <div style="overflow-x:auto; padding:10px;">
         <table border="1" cellpadding="8" cellspacing="0"
@@ -63,7 +59,7 @@ if (isset($_POST['search'])) {
             </thead>
             <tbody>
                 <?php $count = 1; ?>
-                <?php while ($row = $result->fetch_assoc()): ?>
+                <?php foreach ($students as $row): ?>
                     <tr>
                         <td><?= $count++ ?></td>
                         <td><?= htmlspecialchars($row['student_id']) ?></td>
@@ -78,18 +74,20 @@ if (isset($_POST['search'])) {
                         <td><?= htmlspecialchars($row['department'] ?? '—') ?></td>
                         <td><?= htmlspecialchars($row['year'] ?? '—') ?></td>
                     </tr>
-                <?php endwhile; ?>
+                <?php endforeach; ?>
             </tbody>
         </table>
         </div>
 <?php
-        else:
-            echo "<p style='color:#991b1b; text-align:center; font-weight:bold;'>
-                    No student found matching: " . htmlspecialchars($key) . "
-                  </p>";
-        endif;
+            else:
+                echo "<p style='color:#991b1b; text-align:center; font-weight:bold;'>
+                        No student found matching: " . htmlspecialchars($key) . "
+                      </p>";
+            endif;
 
-        $stmt->close();
+        } catch (PDOException $e) {
+            echo "<p style='color:red; text-align:center;'>Database Error: " . $e->getMessage() . "</p>";
+        }
     }
 }
 ?>

@@ -9,37 +9,38 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['deleteKey'])) {
     $deleteKey = trim($_POST['deleteKey']);
 
     if ($deleteKey !== '') {
-        // Delete from users2 (by student_id only)
-        $stmt = $conn->prepare("DELETE FROM users2 WHERE student_id = ?");
-        $stmt->bind_param("s", $deleteKey);
-        $stmt->execute();
+        try {
+            // 1. Delete from users2 (PDO)
+            $stmt = $conn->prepare("DELETE FROM users2 WHERE student_id = :sid");
+            $stmt->execute(['sid' => $deleteKey]);
 
-        if ($stmt->affected_rows > 0) {
-            // Also delete the login account
-            $stmt2 = $conn->prepare("DELETE FROM users WHERE student_id = ?");
-            $stmt2->bind_param("s", $deleteKey);
-            $stmt2->execute();
-            $stmt2->close();
+            if ($stmt->rowCount() > 0) { // Use rowCount() for PDO instead of affected_rows
+                // 2. Also delete the login account (PDO)
+                $stmt2 = $conn->prepare("DELETE FROM users WHERE student_id = :sid");
+                $stmt2->execute(['sid' => $deleteKey]);
 
-            $message = "Student deleted successfully!";
-            $message_type = "success";
-        } else {
-            $message = "No student found with this ID.";
+                $message = "Student deleted successfully!";
+                $message_type = "success";
+            } else {
+                $message = "No student found with this ID.";
+            }
+        } catch (PDOException $e) {
+            $message = "Database error: " . $e->getMessage();
         }
-        $stmt->close();
     } else {
         $message = "Please enter Student ID.";
     }
 }
 
-/* ============ LOAD STUDENTS WITH COLLEGE ============ */
-$result = $conn->query(
+/* ============ LOAD STUDENTS WITH COLLEGE (PDO) ============ */
+$stmt = $conn->query(
     "SELECT student_id, firstname, father_name, grandfather_name,
             age, gender, phone, region, secondary_school,
             college, department, `year`
      FROM users2
      ORDER BY student_id ASC"
 );
+$students = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 /* ============ COLLEGE NAME LOOKUP ============ */
 $college_names = [
@@ -97,9 +98,9 @@ $college_names = [
         </tr>
     </thead>
     <tbody>
-        <?php if ($result && $result->num_rows > 0): ?>
+        <?php if (!empty($students)): ?>
             <?php $count = 1; ?>
-            <?php while ($row = $result->fetch_assoc()): ?>
+            <?php foreach ($students as $row): ?>
                 <tr>
                     <td><?= $count++ ?></td>
                     <td><?= htmlspecialchars($row['student_id']) ?></td>
@@ -132,7 +133,7 @@ $college_names = [
                         </form>
                     </td>
                 </tr>
-            <?php endwhile; ?>
+            <?php endforeach; ?>
         <?php else: ?>
             <tr><td colspan="14" style="color:#991b1b; font-weight:bold;">No students found.</td></tr>
         <?php endif; ?>

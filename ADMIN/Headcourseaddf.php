@@ -1,48 +1,60 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <link rel="stylesheet" href="Head.css">
-    <style> body { background-color: #f4f6f9; padding: 20px; } </style>
-</head>
-<body>
-    <div class="page-container">
-        <div class="page-header">
-            <div class="header-text">
-                <h2>📚 Add New Course</h2>
-                <p>Department: <strong><?= htmlspecialchars($hod_department) ?></strong></p>
-            </div>
-        </div>
+<?php
+if (session_status() === PHP_SESSION_NONE) { session_start(); }
+require 'db.php';
 
-        <div class="filter-bar" style="max-width: 600px;">
-            <?= $message ?>
-            <form method="POST" action="Headcourseadd.php" style="display: flex; flex-direction: column; gap: 15px;">
-                <div class="filter-group">
-                    <label>Course Code</label>
-                    <input type="text" name="course_code" required>
-                </div>
-                <div class="filter-group">
-                    <label>Course Name</label>
-                    <input type="text" name="course_name" required>
-                </div>
-                <div class="filter-group">
-                    <label>Credit Hour</label>
-                    <input type="number" name="credit_hour" required>
-                </div>
-                <div class="filter-group">
-                    <label>Year</label>
-                    <input type="number" name="course_year" required placeholder="e.g., 1" min="1" max="7">
-                </div>
-                <div class="filter-group">
-                    <label>Semester</label>
-                    <select name="course_semester" required>
-                        <option value="1">Semester 1</option>
-                        <option value="2">Semester 2</option>
-                    </select>
-                </div>
-                <button type="submit" class="btn-apply" style="width: 100%; margin-top: 10px;">Add Course</button>
-            </form>
-        </div>
-    </div>
-</body>
-</html>
+// 1. Security Check
+if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['head', 'admin'])) {
+    header("Location: loginf.php"); 
+    exit();
+}
+
+$hod_department = trim($_SESSION['department'] ?? '');
+$hod_college    = trim($_SESSION['college'] ?? '');
+$message = '';
+
+// 2. Handle Form Submission (POST)
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $course_code     = trim($_POST['course_code'] ?? '');
+    $course_name     = trim($_POST['course_name'] ?? '');
+    $credit_hour     = (int)($_POST['credit_hour'] ?? 0);
+    $course_year     = (int)($_POST['course_year'] ?? 0);
+    $course_semester = (int)($_POST['course_semester'] ?? 0);
+
+    if ($course_code === '' || $course_name === '' || $credit_hour <= 0 || $course_year <= 0 || $course_semester <= 0) {
+        $message = "<p style='color:red; font-weight:bold;'>⚠️ Please fill in all fields correctly.</p>";
+    } else {
+        try {
+            // Check for duplicate course code first
+            $chk = $conn->prepare("SELECT course_id FROM addcourse WHERE course_code = :ccode");
+            $chk->execute(['ccode' => $course_code]);
+            
+            if ($chk->fetch()) {
+                $message = "<p style='color:red; font-weight:bold;'>❌ Course code '$course_code' already exists.</p>";
+            } else {
+                // Insert the new course (PDO)
+                $sql = "INSERT INTO addcourse 
+                        (course_code, course_name, credit_hour, college, department, course_year, course_semester) 
+                        VALUES (:code, :name, :credit, :college, :dept, :year, :sem)";
+                
+                $stmt = $conn->prepare($sql);
+                $stmt->execute([
+                    'code' => $course_code,
+                    'name' => $course_name,
+                    'credit' => $credit_hour,
+                    'college' => $hod_college,
+                    'dept' => $hod_department,
+                    'year' => $course_year,
+                    'sem' => $course_semester
+                ]);
+
+                $message = "<p style='color:green; font-weight:bold;'>✅ Course '$course_code' added successfully!</p>";
+            }
+        } catch (PDOException $e) {
+            $message = "<p style='color:red; font-weight:bold;'>❌ Database Error: " . $e->getMessage() . "</p>";
+        }
+    }
+}
+
+// 3. Load the View
+include 'Headcourseaddf.php';
+?>

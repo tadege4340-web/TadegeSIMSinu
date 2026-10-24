@@ -97,9 +97,9 @@
                 </tr>
             </thead>
             <tbody>
-                <?php if (isset($result) && $result->num_rows > 0): ?>
+                <?php if (!empty($students)): ?>
                     <?php $count = 1; ?>
-                    <?php while ($row = $result->fetch_assoc()): ?>
+                    <?php foreach ($students as $row): ?>
                         <tr>
                             <td class="center"><?= $count++ ?></td>
                             <td class="mono"><?= htmlspecialchars($row['student_id']) ?></td>
@@ -111,7 +111,7 @@
                             <td class="center">Year <?= htmlspecialchars($row['year'] ?? '—') ?></td>
                             <td class="center">Sem <?= htmlspecialchars($row['current_semester'] ?? '—') ?></td>
                         </tr>
-                    <?php endwhile; ?>
+                    <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
                         <td colspan="9" class="no-data">

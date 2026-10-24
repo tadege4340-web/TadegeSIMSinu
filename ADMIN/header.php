@@ -23,7 +23,6 @@ if ($welcome_name === '') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Injibara University - Admin</title>
-    <!-- FIXED: Removed /phplab/ADMIN/ so CSS loads correctly on Render -->
     <link rel="stylesheet" href="adminuuhome.css">
 </head>
 <body>
@@ -31,7 +30,6 @@ if ($welcome_name === '') {
     <!-- FIXED HEADER -->
     <div class="top-header">
         <div class="header-logo">
-            <!-- FIXED: Removed /phplab/ADMIN/ so image loads correctly on Render -->
             <img src="logoinu.jpg" alt="Injibara University Logo">
         </div>
         <div class="header-title">
@@ -50,7 +48,6 @@ if ($welcome_name === '') {
     <!-- SIDEBAR -->
     <div class="admin-sidebar">
 
-        <!-- FIXED: Changed home.php to homeh.php -->
         <a href="homeh.php" class="direct-link"> DASHBOARD</a>
         
         <button class="dropdown-btn">COLLEGE</button>
@@ -102,3 +99,4 @@ if ($welcome_name === '') {
 
     <!-- MAIN CONTENT OPENS (do NOT close here) -->
     <div class="main-content">
+        <!-- The content from homeh.php, view.php, etc. will be inserted here -->

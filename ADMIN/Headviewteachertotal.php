@@ -13,37 +13,33 @@ if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['head', 'admin
 $hod_department = trim($_SESSION['department'] ?? '');
 $hod_college    = trim($_SESSION['college'] ?? '');
 
-// 2. Fetch All Teachers Query
+// 2. Fetch All Teachers Query (PDO)
 $sql = "SELECT full_name, gender, email, phone 
         FROM teachers 
         WHERE 1=1";
         
 $params = [];
-$types  = "";
 
 if ($_SESSION['role'] === 'head') {
     if (empty($hod_department)) {
         die("Error: Department not set.");
     }
-    $sql .= " AND department = ?";
-    $params[] = $hod_department;
-    $types .= "s";
+    $sql .= " AND department = :dept";
+    $params['dept'] = $hod_department;
 }
 
 $sql .= " ORDER BY full_name ASC";
 
-$stmt = $conn->prepare($sql);
-if ($types !== '') {
-    $stmt->bind_param($types, ...$params);
-}
-$stmt->execute();
-$result = $stmt->get_result();
-
 $teachers = [];
-while ($row = $result->fetch_assoc()) {
-    $teachers[] = $row;
+
+try {
+    $stmt = $conn->prepare($sql);
+    $stmt->execute($params);
+    $teachers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    // If there's a database error, we can display it or just leave the array empty
+    $db_error = $e->getMessage();
 }
-$stmt->close();
 ?>
 <!DOCTYPE html>
 <html lang="en">

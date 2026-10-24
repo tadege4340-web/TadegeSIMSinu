@@ -3,7 +3,13 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-include 'db.php';
+require 'db.php'; // Use require for the database connection
+
+// Security Check: Only allow teachers
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'teacher') {
+    header("Location: loginf.php");
+    exit();
+}
 
 $display_name = "Teacher"; 
 
@@ -11,18 +17,21 @@ $display_name = "Teacher";
 $session_id = $_SESSION['user_id'] ?? $_SESSION['id'] ?? null;
 
 if ($session_id) {
-    // Get the full name from the teachers table
-    $sql = "SELECT full_name FROM teachers WHERE id = ? OR user_id = ? LIMIT 1";
-    
-    if ($stmt = $conn->prepare($sql)) {
-        $stmt->bind_param("ii", $session_id, $session_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
+    try {
+        // Get the full name from the teachers table using PDO
+        $sql = "SELECT full_name FROM teachers WHERE id = :id1 OR user_id = :id2 LIMIT 1";
         
-        if ($row = $result->fetch_assoc()) {
+        $stmt = $conn->prepare($sql);
+        // We bind the same ID to both placeholders
+        $stmt->execute(['id1' => $session_id, 'id2' => $session_id]);
+        
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($row) {
             $display_name = htmlspecialchars($row['full_name']);
         }
-        $stmt->close();
+    } catch (PDOException $e) {
+        // If there is an error, it will just keep the default "Teacher" name
     }
 }
 

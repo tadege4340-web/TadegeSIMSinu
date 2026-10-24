@@ -1,9 +1,10 @@
 <?php
 /* ============================================================
-   MY COURSES — VIEW FILE (mycoursef.php)
+   MY COURSES — VIEW FILE (mycoursef.php) - PDO Version
    ============================================================ */
 
-if (!isset($result)) {
+// Check if the $courses array exists (passed from mycourse.php)
+if (!isset($courses)) {
     header("Location: mycourse.php");
     exit();
 }
@@ -35,8 +36,8 @@ if (!isset($result)) {
                 </tr>
             </thead>
             <tbody>
-            <?php if (mysqli_num_rows($result) > 0): ?>
-                <?php while ($row = mysqli_fetch_assoc($result)): ?>
+            <?php if (count($courses) > 0): ?>
+                <?php foreach ($courses as $row): ?>
                     <?php
                     $grade_status = $row['grade_status'] ?? 'Pending';
                     $is_approved  = ($grade_status === 'Approved');
@@ -65,7 +66,7 @@ if (!isset($result)) {
                             <?php endif; ?>
                         </td>
                     </tr>
-                <?php endwhile; ?>
+                <?php endforeach; ?>
             <?php else: ?>
                 <tr>
                     <td colspan="9" class="no-data">No courses assigned to you.</td>

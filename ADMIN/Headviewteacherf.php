@@ -1,63 +1,46 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="Head.css">
-    <style>
-        body { background-color: #f4f6f9; padding: 20px; }
-    </style>
-</head>
-<body>
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require 'db.php';
 
-    <div class="page-container">
+// 1. Security Check
+if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['head', 'admin', 'teacher'])) {
+    header("Location: loginf.php");
+    exit();
+}
 
-        <!-- Page Header -->
-        <div class="page-header">
-            <div class="header-text">
-                <h2>Department Teachers</h2>
-                <p>
-                    Showing teachers for: <strong><?= htmlspecialchars($hod_department ?: 'All Departments (Admin)') ?></strong> 
-                    <?= !empty($hod_college) ? '(' . htmlspecialchars($hod_college) . ')' : '' ?>
-                </p>
-            </div>
-            <div class="total-badge">
-                Total Teachers: <?= count($teachers) ?>
-            </div>
-        </div>
+$hod_department = trim($_SESSION['department'] ?? '');
+$hod_college    = trim($_SESSION['college'] ?? '');
 
-        <!-- Teachers Table -->
-        <?php if (empty($teachers)): ?>
-            <div class="empty-state">
-                <h3>No teachers found</h3>
-                <p>There are no teachers registered in this department.</p>
-            </div>
-        <?php else: ?>
-            <div class="table-wrapper">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Full Name</th>
-                            <th>Gender</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($teachers as $t): ?>
-                            <tr>
-                                <td class="student-name"><?= htmlspecialchars($t['full_name'] ?? 'N/A') ?></td>
-                                <td><?= htmlspecialchars($t['gender'] ?? 'N/A') ?></td>
-                                <td><?= htmlspecialchars($t['email'] ?? 'N/A') ?></td>
-                                <td><?= htmlspecialchars($t['phone'] ?? 'N/A') ?></td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        <?php endif; ?>
+// 2. Fetch Teachers Query (PDO)
+$sql = "SELECT full_name, gender, email, phone 
+        FROM teachers 
+        WHERE 1=1";
+        
+$params = [];
 
-    </div>
+// Filter by department if the user is a Head
+if ($_SESSION['role'] === 'head') {
+    if (empty($hod_department)) {
+        die("Error: Department not set.");
+    }
+    $sql .= " AND department = :dept";
+    $params['dept'] = $hod_department;
+}
 
-</body>
-</html>
+$sql .= " ORDER BY full_name ASC";
+
+$teachers = [];
+
+try {
+    $stmt = $conn->prepare($sql);
+    $stmt->execute($params);
+    $teachers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $db_error = $e->getMessage();
+}
+
+// 3. Load the View
+include 'Teacherviewf.php'; // Make sure this matches your view filename
+?>

@@ -1,113 +1,123 @@
-<!-- ============ REGISTRAR HEADER ============ -->
-<div class="registrar-header">
-    <h2>Welcome — Changer Grade</h2>
-    
-</div>
+<?php
+/* ============================================================
+   REGISTRAR — CHANGE GRADE (LOGIC) - PDO Version
+   ============================================================ */
 
-<!-- ============ ALERTS ============ -->
-<?php if ($message !== ''): ?>
-    <?php
-    $safe_message = strip_tags($message, '<b><br><strong><small><em><u><i><span>');
-    ?>
-    <div class="alert alert-<?= htmlspecialchars($message_type) ?>">
-        <?= $safe_message ?>
-    </div>
-<?php endif; ?>
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require 'db.php';
 
-<!-- ============ FORM ============ -->
-<form method="POST" class="grade-change-form">
+/* ============================================================
+   ADMIN / REGISTRAR CHECK
+   ============================================================ */
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+    header("Location: loginf.php");
+    exit();
+}
 
-    <div class="section-title"></div>
+$message      = "";
+$message_type = "";
 
-    <div class="form-row">
-        <label for="student_id">Student ID <span class="req">*</span></label>
-        <input type="text" id="student_id" name="student_id"
-               value="<?= htmlspecialchars($_POST['student_id'] ?? '') ?>"
-               placeholder="e.g. 0936" required>
-    </div>
+/* ============================================================
+   HANDLE POST — CHANGE GRADE
+   ============================================================ */
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $student_id  = trim($_POST['student_id'] ?? '');
+    $course_code = trim($_POST['course_code'] ?? '');
+    $ac_year     = trim($_POST['ac_year'] ?? '');
+    $semester    = (int)($_POST['semester'] ?? 0);
+    $new_grade   = strtoupper(trim($_POST['new_grade'] ?? ''));
+    $new_gp      = (float)($_POST['new_grade_point'] ?? 0);
+    $reason      = trim($_POST['reason'] ?? '');
+    $changed_by  = $_SESSION['username'] ?? 'admin';
 
-    <div class="form-row">
-        <label for="course_code">Course Code <span class="req">*</span></label>
-        <input type="text" id="course_code" name="course_code"
-               value="<?= htmlspecialchars($_POST['course_code'] ?? '') ?>"
-               placeholder="e.g. cs45" required>
-    </div>
+    if ($student_id === '' || $course_code === '' || $ac_year === '' || $semester === 0 || $new_grade === '') {
+        $message = "⚠️ Please fill in all required fields.";
+        $message_type = "error";
+    } else {
+        try {
+            /* ---------- 1. Check if the grade record exists and get the old grade ---------- */
+            $stmt = $conn->prepare("
+                SELECT id, grade, grade_point 
+                FROM student_courses 
+                WHERE student_id = :sid 
+                  AND course_code = :ccode 
+                  AND ac_year = :ayear 
+                  AND semester = :sem 
+                LIMIT 1");
+            $stmt->execute([
+                'sid' => $student_id,
+                'ccode' => $course_code,
+                'ayear' => $ac_year,
+                'sem' => $semester
+            ]);
+            $record = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    <div class="form-row">
-        <label for="ac_year">Academic Year <span class="req">*</span></label>
-        <select id="ac_year" name="ac_year" required>
-            <option value="">-- Select --</option>
-            <option value="2024/2025" <?= (($_POST['ac_year'] ?? '') === '2024/2025') ? 'selected' : '' ?>>2024/2025</option>
-            <option value="2025/2026" <?= (($_POST['ac_year'] ?? '') === '2025/2026') ? 'selected' : '' ?>>2025/2026</option>
-            <option value="2026/2027" <?= (($_POST['ac_year'] ?? '') === '2026/2027') ? 'selected' : '' ?>>2026/2027</option>
-        </select>
-    </div>
+            if (!$record) {
+                $message = "❌ No grade record found for this student, course, year, and semester.";
+                $message_type = "error";
+            } else {
+                $old_grade = $record['grade'];
+                $old_gp    = $record['grade_point'];
 
-    <div class="form-row">
-        <label for="semester">Semester <span class="req">*</span></label>
-        <select id="semester" name="semester" required>
-            <option value="">-- Select --</option>
-            <option value="1" <?= (($_POST['semester'] ?? '') == 1) ? 'selected' : '' ?>>Semester 1</option>
-            <option value="2" <?= (($_POST['semester'] ?? '') == 2) ? 'selected' : '' ?>>Semester 2</option>
-        </select>
-    </div>
+                /* ---------- 2. Determine Pass/Fail status ---------- */
+                $status = ($new_gp >= 2.00) ? 'Pass' : 'Fail';
 
-    <div class="section-title"></div>
+                /* ---------- 3. Update the grade in student_courses ---------- */
+                $upd = $conn->prepare("
+                    UPDATE student_courses 
+                    SET grade = :grade, 
+                        grade_point = :gp, 
+                        status = :status, 
+                        grade_status = 'Approved', 
+                        last_edited_by = :changed_by, 
+                        last_edited_at = NOW(),
+                        edit_reason = :reason
+                    WHERE id = :id");
+                $upd->execute([
+                    'grade' => $new_grade,
+                    'gp' => $new_gp,
+                    'status' => $status,
+                    'changed_by' => $changed_by,
+                    'reason' => $reason,
+                    'id' => $record['id']
+                ]);
 
-    <div class="form-row">
-        <label for="new_grade">New Grade <span class="req">*</span></label>
-        <select id="new_grade" name="new_grade" required onchange="autoGradePoint()">
-            <option value="">-- Select Grade --</option>
-            <option value="A+">A+</option>
-            <option value="A">A</option>
-            <option value="A-">A-</option>
-            <option value="B+">B+</option>
-            <option value="B">B</option>
-            <option value="B-">B-</option>
-            <option value="C+">C+</option>
-            <option value="C">C</option>
-            <option value="C-">C-</option>
-            <option value="D">D</option>
-            <option value="F">F</option>
-        </select>
-    </div>
+                /* ---------- 4. Log the change in grade_audit_log ---------- */
+                $log = $conn->prepare("
+                    INSERT INTO grade_audit_log 
+                    (student_course_id, student_id, course_code, ac_year, semester, 
+                     old_grade, new_grade, old_grade_point, new_grade_point, action, action_by, reason) 
+                    VALUES (:sc_id, :sid, :ccode, :ayear, :sem, :old_grade, :new_grade, :old_gp, :new_gp, 'registrar_change', :changed_by, :reason)");
+                $log->execute([
+                    'sc_id' => $record['id'],
+                    'sid' => $student_id,
+                    'ccode' => $course_code,
+                    'ayear' => $ac_year,
+                    'sem' => $semester,
+                    'old_grade' => $old_grade,
+                    'new_grade' => $new_grade,
+                    'old_gp' => $old_gp,
+                    'new_gp' => $new_gp,
+                    'changed_by' => $changed_by,
+                    'reason' => $reason
+                ]);
 
-    <div class="form-row">
-        <label for="new_grade_point">New Grade Point <span class="req">*</span></label>
-        <input type="number" id="new_grade_point" name="new_grade_point"
-               step="0.01" min="0" max="4"
-               value="<?= htmlspecialchars($_POST['new_grade_point'] ?? '') ?>"
-               placeholder="e.g. 3.75" required>
-    </div>
-
-    <div class="section-title">📝 Justification</div>
-
-    <div class="form-row">
-        <label for="reason">Reason for Change <span class="req">*</span></label>
-        <textarea id="reason" name="reason" rows="3" required
-                  placeholder="e.g. Instructor reported a data entry error..."><?= htmlspecialchars($_POST['reason'] ?? '') ?></textarea>
-    </div>
-
-    <div class="btn-wrap">
-        <button type="submit" class="btn-registrar">
-            🔓 CHANGE GRADE
-        </button>
-    </div>
-
-</form>
-
-<!-- ============ AUTO GRADE POINT SCRIPT ============ -->
-<script>
-function autoGradePoint() {
-    const map = {
-        'A+': 4.00, 'A': 4.00, 'A-': 3.75,
-        'B+': 3.50, 'B': 3.00, 'B-': 2.75,
-        'C+': 2.50, 'C': 2.00, 'C-': 1.75,
-        'D':  1.00, 'F': 0.00
-    };
-    const g = document.getElementById('new_grade').value;
-    if (map[g] !== undefined) {
-        document.getElementById('new_grade_point').value = map[g].toFixed(2);
+                $message = "✅ Grade changed successfully from <b>" . htmlspecialchars($old_grade) . "</b> to <b>" . htmlspecialchars($new_grade) . "</b>!";
+                $message_type = "success";
+            }
+        } catch (PDOException $e) {
+            $message = "❌ Database Error: " . $e->getMessage();
+            $message_type = "error";
+        }
     }
 }
-</script>
+
+/* ============================================================
+   LOAD HEADER + VIEW
+   ============================================================ */
+include 'header.php';
+include 'mygradechangerf.php';
+include 'footer.php';
+?>

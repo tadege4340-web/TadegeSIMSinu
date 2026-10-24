@@ -27,14 +27,21 @@ if (!defined('FROM_MYGRADEVIEW')) {
         <select name="college">
             <option value="">All Colleges</option>
             <?php
-            $r = $conn->query("SELECT code, name FROM college ORDER BY id");
-            while ($c = $r->fetch_assoc()):
+            // FIXED: Changed mysqli to PDO
+            try {
+                $r = $conn->query("SELECT code, name FROM college ORDER BY id");
+                while ($c = $r->fetch(PDO::FETCH_ASSOC)):
             ?>
                 <option value="<?= htmlspecialchars($c['code']) ?>"
                     <?= $filter_college === $c['code'] ? 'selected' : '' ?>>
                     <?= htmlspecialchars($c['name']) ?>
                 </option>
-            <?php endwhile; ?>
+            <?php 
+                endwhile; 
+            } catch (PDOException $e) {
+                // Handle error silently
+            }
+            ?>
         </select>
     </div>
 
@@ -78,8 +85,8 @@ if (!defined('FROM_MYGRADEVIEW')) {
                 <th>Sem</th>
                 <th>Grade</th>
                 <th>Grade Point</th>
-                <th>SGPA</th>       <!-- NEW -->
-                <th>CGPA</th>       <!-- NEW -->
+                <th>SGPA</th>
+                <th>CGPA</th>
                 <th>Status</th>
                 <th>Action</th>
             </tr>
@@ -106,8 +113,8 @@ if (!defined('FROM_MYGRADEVIEW')) {
                         <td style="text-align:center;"><?= htmlspecialchars($g['semester'] ?? '—') ?></td>
                         <td class="grade-cell"><?= htmlspecialchars($g['grade'] ?? '—') ?></td>
                         <td class="gp-cell"><?= $g['grade_point'] !== null ? number_format($g['grade_point'], 2) : '—' ?></td>
-                        <td class="sgpa-cell"><?= number_format($g['sgpa'], 2) ?></td>   <!-- NEW -->
-                        <td class="cgpa-cell"><?= number_format($g['cgpa'], 2) ?></td>   <!-- NEW -->
+                        <td class="sgpa-cell"><?= number_format($g['sgpa'] ?? 0, 2) ?></td>
+                        <td class="cgpa-cell"><?= number_format($g['cgpa'] ?? 0, 2) ?></td>
                         <td>
                             <?php if ($g['status'] === 'Pass'): ?>
                                 <span class="badge-pass">Pass</span>

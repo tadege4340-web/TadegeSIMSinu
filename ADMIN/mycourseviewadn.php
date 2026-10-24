@@ -4,14 +4,16 @@
 <h2 style="text-align:center; color:#2c3e50;">View Courses</h2>
 
 <?php
-$sql = "SELECT course_code, course_name, credit_hour, category
-        FROM addcourse
-        ORDER BY course_code ASC";
+try {
+    $sql = "SELECT course_code, course_name, credit_hour, category
+            FROM addcourse
+            ORDER BY course_code ASC";
 
-$result = mysqli_query($conn, $sql);
-
-if (!$result) {
-    die("Error fetching courses: " . mysqli_error($conn));
+    $stmt = $conn->prepare($sql);
+    $stmt->execute();
+    $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    die("Error fetching courses: " . $e->getMessage());
 }
 ?>
 
@@ -26,15 +28,15 @@ if (!$result) {
     </thead>
 
     <tbody>
-        <?php if (mysqli_num_rows($result) > 0): ?>
-            <?php while ($row = mysqli_fetch_assoc($result)): ?>
+        <?php if (count($courses) > 0): ?>
+            <?php foreach ($courses as $row): ?>
                 <tr>
                     <td><?= htmlspecialchars($row['course_code']) ?></td>
                     <td><?= htmlspecialchars($row['course_name']) ?></td>
                     <td><?= htmlspecialchars($row['credit_hour']) ?></td>
                     <td><?= htmlspecialchars($row['category']) ?></td>
                 </tr>
-            <?php endwhile; ?>
+            <?php endforeach; ?>
         <?php else: ?>
             <tr><td colspan="4">No courses found in the database.</td></tr>
         <?php endif; ?>

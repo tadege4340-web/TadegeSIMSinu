@@ -1,6 +1,6 @@
 <?php
 /* ============================================================
-   REGISTRAR — CHANGE GRADE
+   REGISTRAR — CHANGE GRADE (PDO Version)
    ============================================================ */
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -52,130 +52,100 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $message_type = "error";
     } else {
 
-        /* ---------- Fetch existing enrollment ---------- */
-        $fetch = $conn->prepare("
-            SELECT id, grade, grade_point, grade_status 
-            FROM student_courses 
-            WHERE student_id = ? 
-              AND course_code = ? 
-              AND ac_year = ? 
-              AND semester = ?
-            LIMIT 1");
-        $fetch->bind_param("sssi", $student_id, $course_code, $ac_year, $semester);
-        $fetch->execute();
-        $existing = $fetch->get_result()->fetch_assoc();
-        $fetch->close();
+        try {
+            /* ---------- Fetch existing enrollment (PDO) ---------- */
+            $fetch = $conn->prepare("
+                SELECT id, grade, grade_point, grade_status 
+                FROM student_courses 
+                WHERE student_id = :sid 
+                  AND course_code = :ccode 
+                  AND ac_year = :ayear 
+                  AND semester = :sem
+                LIMIT 1");
+            $fetch->execute([
+                'sid' => $student_id,
+                'ccode' => $course_code,
+                'ayear' => $ac_year,
+                'sem' => $semester
+            ]);
+            $existing = $fetch->fetch(PDO::FETCH_ASSOC);
 
-        if (!$existing) {
-            $message = "❌ <strong>Enrollment not found.</strong><br>"
-                     . "Student: " . htmlspecialchars($student_id) . "<br>"
-                     . "Course: " . htmlspecialchars($course_code) . "<br>"
-                     . "Year: " . htmlspecialchars($ac_year) . "<br>"
-                     . "Semester: " . htmlspecialchars($semester) . "<br><br>"
-                     . "📌 Assign the course to the student first.";
-            $message_type = "error";
-        } else {
-
-            $status    = $new_gp >= 2.00 ? 'Pass' : 'Fail';
-            $registrar = $_SESSION['username'] ?? $_SESSION['full_name'] ?? 'registrar';
-
-            /* ============================================================
-               UPDATE — 7 placeholders = "sdssssi"
-               ============================================================ */
-            $upd = $conn->prepare("
-                UPDATE student_courses 
-                SET grade           = ?, 
-                    grade_point     = ?, 
-                    status          = ?,
-                    grade_status    = 'Approved',
-                    approved_at     = NOW(),
-                    approved_by     = ?,
-                    last_edited_at  = NOW(),
-                    last_edited_by  = ?,
-                    edit_reason     = ?
-                WHERE id = ?");
-
-            /* Type letters:
-                 s → $new_grade
-                 d → $new_gp
-                 s → $status
-                 s → $registrar (approved_by)
-                 s → $registrar (last_edited_by)
-                 s → $reason
-                 i → $existing['id']
-               Total: "sdssssi"  (7 characters)
-            */
-            $upd->bind_param("sdssssi",
-                $new_grade,
-                $new_gp,
-                $status,
-                $registrar,
-                $registrar,
-                $reason,
-                $existing['id']);
-
-            try {
-                if ($upd->execute()) {
-
-                    /* ---------- Log to audit table ---------- */
-                    /* Count: i s s s i s s d s s s = "isssissdsss" (11 letters) */
-                    $audit = $conn->prepare("
-                        INSERT INTO grade_audit_log 
-                            (student_course_id, student_id, course_code,
-                             ac_year, semester, old_grade, new_grade,
-                             old_grade_point, new_grade_point,
-                             action, action_by, reason)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'registrar_change', ?, ?)");
-
-                    /* Count placeholders: 9 ? before 'registrar_change', then 2 more = 11 */
-                    /* Type letters:
-                         i → $existing['id']
-                         s → $student_id
-                         s → $course_code
-                         s → $ac_year
-                         i → $semester
-                         s → $existing['grade']
-                         s → $new_grade
-                         d → $existing['grade_point']
-                         d → $new_gp
-                         s → $registrar
-                         s → $reason
-                       Total: "isssissddss" (11 letters)
-                    */
-                    $audit->bind_param("isssissddss",
-                        $existing['id'],
-                        $student_id,
-                        $course_code,
-                        $ac_year,
-                        $semester,
-                        $existing['grade'],
-                        $new_grade,
-                        $existing['grade_point'],
-                        $new_gp,
-                        $registrar,
-                        $reason);
-                    $audit->execute();
-                    $audit->close();
-
-                    $message = "✅ <strong>Grade changed successfully.</strong><br>"
-                             . "Student: <strong>" . htmlspecialchars($student_id) . "</strong><br>"
-                             . "Course: <strong>" . htmlspecialchars($course_code) . "</strong><br>"
-                             . "Old Grade: <strong>" . htmlspecialchars($existing['grade'] ?: '—') 
-                             . "</strong> (" . htmlspecialchars($existing['grade_point'] ?: '—') . ")<br>"
-                             . "New Grade: <strong>" . htmlspecialchars($new_grade) 
-                             . "</strong> (" . htmlspecialchars($new_gp) . ")<br>"
-                             . "Reason: <em>" . htmlspecialchars($reason) . "</em>";
-                    $message_type = "success";
-
-                } else {
-                    $message = "❌ Database error: " . htmlspecialchars($conn->error);
-                    $message_type = "error";
-                }
-            } catch (mysqli_sql_exception $e) {
-                $message = "❌ Exception: " . htmlspecialchars($e->getMessage());
+            if (!$existing) {
+                $message = "❌ <strong>Enrollment not found.</strong><br>"
+                         . "Student: " . htmlspecialchars($student_id) . "<br>"
+                         . "Course: " . htmlspecialchars($course_code) . "<br>"
+                         . "Year: " . htmlspecialchars($ac_year) . "<br>"
+                         . "Semester: " . htmlspecialchars($semester) . "<br><br>"
+                         . "📌 Assign the course to the student first.";
                 $message_type = "error";
+            } else {
+
+                $status    = $new_gp >= 2.00 ? 'Pass' : 'Fail';
+                $registrar = $_SESSION['username'] ?? $_SESSION['full_name'] ?? 'registrar';
+
+                /* ============================================================
+                   UPDATE
+                   ============================================================ */
+                $upd = $conn->prepare("
+                    UPDATE student_courses 
+                    SET grade           = :new_grade, 
+                        grade_point     = :new_gp, 
+                        status          = :status,
+                        grade_status    = 'Approved',
+                        approved_at     = NOW(),
+                        approved_by     = :registrar1,
+                        last_edited_at  = NOW(),
+                        last_edited_by  = :registrar2,
+                        edit_reason     = :reason
+                    WHERE id = :id");
+
+                $upd->execute([
+                    'new_grade' => $new_grade,
+                    'new_gp' => $new_gp,
+                    'status' => $status,
+                    'registrar1' => $registrar,
+                    'registrar2' => $registrar,
+                    'reason' => $reason,
+                    'id' => $existing['id']
+                ]);
+
+                /* ---------- Log to audit table (PDO) ---------- */
+                $audit = $conn->prepare("
+                    INSERT INTO grade_audit_log 
+                        (student_course_id, student_id, course_code,
+                         ac_year, semester, old_grade, new_grade,
+                         old_grade_point, new_grade_point,
+                         action, action_by, reason)
+                    VALUES (:sc_id, :sid, :ccode, :ayear, :sem, :old_grade, :new_grade, 
+                            :old_gp, :new_gp, 'registrar_change', :action_by, :reason)");
+
+                $audit->execute([
+                    'sc_id' => $existing['id'],
+                    'sid' => $student_id,
+                    'ccode' => $course_code,
+                    'ayear' => $ac_year,
+                    'sem' => $semester,
+                    'old_grade' => $existing['grade'],
+                    'new_grade' => $new_grade,
+                    'old_gp' => $existing['grade_point'],
+                    'new_gp' => $new_gp,
+                    'action_by' => $registrar,
+                    'reason' => $reason
+                ]);
+
+                $message = "✅ <strong>Grade changed successfully.</strong><br>"
+                         . "Student: <strong>" . htmlspecialchars($student_id) . "</strong><br>"
+                         . "Course: <strong>" . htmlspecialchars($course_code) . "</strong><br>"
+                         . "Old Grade: <strong>" . htmlspecialchars($existing['grade'] ?: '—') 
+                         . "</strong> (" . htmlspecialchars($existing['grade_point'] ?: '—') . ")<br>"
+                         . "New Grade: <strong>" . htmlspecialchars($new_grade) 
+                         . "</strong> (" . htmlspecialchars($new_gp) . ")<br>"
+                         . "Reason: <em>" . htmlspecialchars($reason) . "</em>";
+                $message_type = "success";
             }
-            $upd->close();
+        } catch (PDOException $e) {
+            $message = "❌ Database Error: " . htmlspecialchars($e->getMessage());
+            $message_type = "error";
         }
     }
 }
@@ -183,3 +153,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 include 'header.php';
 include 'mygradechangerf.php';
 include 'footer.php';
+?>

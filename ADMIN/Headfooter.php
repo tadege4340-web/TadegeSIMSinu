@@ -1,8 +1,7 @@
-    </div> 
-
-    <footer class="teacher-footer">
-        <p>&copy; <?= date('Y') ?> Injibara University. Student Information Management System.</p>
-        <p>Admin Portal | All Rights Reserved</p>
+    </div> <!-- Close main-content -->
+    
+    <footer class="site-footer">
+        <p>&copy; <?= date('Y') ?> Injibara University. All Rights Reserved.</p>
     </footer>
 
 </body>

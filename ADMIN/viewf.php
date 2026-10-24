@@ -123,14 +123,14 @@
                     <th>College</th>
                     <th>Department</th>
                     <th>Year</th>
-                    <th>Semester</th> <!-- 🔥 ADDED HEADER -->
+                    <th>Semester</th>
                     <th>Registered On</th>
                 </tr>
             </thead>
             <tbody>
-                <?php if ($result->num_rows > 0): ?>
+                <?php if (!empty($students)): ?>
                     <?php $count = 1; ?>
-                    <?php while ($row = $result->fetch_assoc()): ?>
+                    <?php foreach ($students as $row): ?>
                         <tr>
                             <td class="center"><?= $count++ ?></td>
                             <td class="mono"><?= htmlspecialchars($row['student_id']) ?></td>
@@ -150,13 +150,12 @@
                             </td>
                             <td><?= htmlspecialchars($row['department'] ?? '—') ?></td>
                             <td class="center"><?= htmlspecialchars($row['year'] ?? '—') ?></td>
-                            <td class="center">Sem <?= htmlspecialchars($row['current_semester'] ?? '—') ?></td> <!-- 🔥 ADDED DATA -->
+                            <td class="center">Sem <?= htmlspecialchars($row['current_semester'] ?? '—') ?></td>
                             <td class="date-cell"><?= htmlspecialchars($row['created_at'] ?? '—') ?></td>
                         </tr>
-                    <?php endwhile; ?>
+                    <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <!-- Changed colspan to 15 to account for the new column -->
                         <td colspan="15" class="no-data">
                             <div class="empty-state">
                                 <div class="es-icon">🔍</div>

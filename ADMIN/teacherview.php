@@ -25,13 +25,16 @@ $f_status     = trim($_GET['status']     ?? '');
 $f_search     = trim($_GET['search']     ?? '');
 
 /* ============================================================
-   LOAD COLLEGES
+   LOAD COLLEGES (PDO)
    ============================================================ */
 $colleges = [];
-$r = $conn->query("SELECT code, name FROM college ORDER BY name");
-if ($r) {
-    while ($row = $r->fetch_assoc()) $colleges[] = $row;
-}
+try {
+    $r = $conn->query("SELECT code, name FROM college ORDER BY name");
+    if ($r) {
+        $colleges = $r->fetchAll(PDO::FETCH_ASSOC);
+    }
+} catch (PDOException $e) {}
+
 if (empty($colleges)) {
     foreach ($college_names as $code => $name) {
         $colleges[] = ['code' => $code, 'name' => $name];
@@ -39,42 +42,47 @@ if (empty($colleges)) {
 }
 
 /* ============================================================
-   LOAD DEPARTMENTS FOR SELECTED COLLEGE
+   LOAD DEPARTMENTS FOR SELECTED COLLEGE (PDO)
    ============================================================ */
 $departments = [];
 if ($f_college !== '') {
-    $stmt = $conn->prepare("
-        SELECT name FROM departments 
-        WHERE college_code = ? 
-        ORDER BY name
-    ");
-    $stmt->bind_param("s", $f_college);
-    $stmt->execute();
-    $res = $stmt->get_result();
-    while ($row = $res->fetch_assoc()) $departments[] = $row['name'];
-    $stmt->close();
+    try {
+        $stmt = $conn->prepare("SELECT name FROM departments WHERE college_code = :cc ORDER BY name");
+        $stmt->execute(['cc' => $f_college]);
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $departments[] = $row['name'];
+        }
+    } catch (PDOException $e) {}
 }
 
 /* ============================================================
-   LOAD DISTINCT POSITIONS (for filter dropdown)
+   LOAD DISTINCT POSITIONS (PDO)
    ============================================================ */
 $positions = [];
-$r = $conn->query("SELECT DISTINCT position FROM teachers 
-                   WHERE position IS NOT NULL AND position <> '' 
-                   ORDER BY position");
-if ($r) while ($row = $r->fetch_assoc()) $positions[] = $row['position'];
+try {
+    $r = $conn->query("SELECT DISTINCT position FROM teachers WHERE position IS NOT NULL AND position <> '' ORDER BY position");
+    if ($r) {
+        while ($row = $r->fetch(PDO::FETCH_ASSOC)) {
+            $positions[] = $row['position'];
+        }
+    }
+} catch (PDOException $e) {}
 
 /* ============================================================
-   LOAD DISTINCT STATUSES (for filter dropdown)
+   LOAD DISTINCT STATUSES (PDO)
    ============================================================ */
 $statuses = [];
-$r = $conn->query("SELECT DISTINCT status FROM teachers 
-                   WHERE status IS NOT NULL AND status <> '' 
-                   ORDER BY status");
-if ($r) while ($row = $r->fetch_assoc()) $statuses[] = $row['status'];
+try {
+    $r = $conn->query("SELECT DISTINCT status FROM teachers WHERE status IS NOT NULL AND status <> '' ORDER BY status");
+    if ($r) {
+        while ($row = $r->fetch(PDO::FETCH_ASSOC)) {
+            $statuses[] = $row['status'];
+        }
+    }
+} catch (PDOException $e) {}
 
 /* ============================================================
-   BUILD TEACHER QUERY
+   BUILD TEACHER QUERY (PDO)
    ============================================================ */
 $sql = "SELECT id, full_name, age, gender, email, phone, address,
                college, department, qualification, position,
@@ -83,53 +91,51 @@ $sql = "SELECT id, full_name, age, gender, email, phone, address,
         WHERE 1=1";
 
 $params = [];
-$types  = '';
 
 if ($f_college !== '') {
-    $sql .= " AND college = ?";
-    $params[] = $f_college;
-    $types .= 's';
+    $sql .= " AND college = :college";
+    $params['college'] = $f_college;
 }
 if ($f_department !== '') {
-    $sql .= " AND department = ?";
-    $params[] = $f_department;
-    $types .= 's';
+    $sql .= " AND department = :department";
+    $params['department'] = $f_department;
 }
 if ($f_position !== '') {
-    $sql .= " AND position = ?";
-    $params[] = $f_position;
-    $types .= 's';
+    $sql .= " AND position = :position";
+    $params['position'] = $f_position;
 }
 if ($f_status !== '') {
-    $sql .= " AND status = ?";
-    $params[] = $f_status;
-    $types .= 's';
+    $sql .= " AND status = :status";
+    $params['status'] = $f_status;
 }
 if ($f_search !== '') {
-    $sql .= " AND (full_name LIKE ? 
-                OR email     LIKE ? 
-                OR phone     LIKE ?
-                OR id        LIKE ?)";
-    $like = '%' . $f_search . '%';
-    $params[] = $like; $params[] = $like;
-    $params[] = $like; $params[] = $like;
-    $types .= 'ssss';
+    $sql .= " AND (full_name LIKE :search 
+                OR email     LIKE :search 
+                OR phone     LIKE :search
+                OR id        LIKE :search)";
+    $params['search'] = '%' . $f_search . '%';
 }
 
 $sql .= " ORDER BY id ASC";
 
-$stmt = $conn->prepare($sql);
-if (!empty($params)) {
-    $stmt->bind_param($types, ...$params);
+try {
+    $stmt = $conn->prepare($sql);
+    $stmt->execute($params);
+    $teachers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $teachers = [];
+    $db_error = $e->getMessage();
 }
-$stmt->execute();
-$result = $stmt->get_result();
 
 /* ============================================================
-   COUNT TOTALS
+   COUNT TOTALS (PDO)
    ============================================================ */
-$totalAll      = $conn->query("SELECT COUNT(*) AS c FROM teachers")->fetch_assoc()['c'];
-$totalFiltered = $result->num_rows;
+try {
+    $totalAll = $conn->query("SELECT COUNT(*) FROM teachers")->fetchColumn();
+} catch (PDOException $e) {
+    $totalAll = 0;
+}
+$totalFiltered = count($teachers);
 
 /* ============================================================
    NOW INCLUDE HEADER + VIEW + FOOTER
@@ -137,3 +143,4 @@ $totalFiltered = $result->num_rows;
 include 'header.php';
 include 'teacherviewf.php';
 include 'footer.php';
+?>

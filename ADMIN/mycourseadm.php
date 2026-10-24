@@ -1,6 +1,6 @@
 <?php
 /* ============================================================
-   SAVE NEW COURSE — INSERT HANDLER
+   SAVE NEW COURSE — INSERT HANDLER (PDO Version)
    Handles POST from mycourseadmin.php form
    ============================================================ */
 
@@ -61,51 +61,45 @@ if (!empty($errors)) {
 }
 
 /* ============================================================
-   DUPLICATE CHECK
+   DUPLICATE CHECK (PDO)
    ============================================================ */
-$dup = $conn->prepare("SELECT course_id FROM addcourse WHERE course_code = ?");
-$dup->bind_param("s", $course_code);
-$dup->execute();
-$dup->store_result();
+try {
+    $dup = $conn->prepare("SELECT course_id FROM addcourse WHERE course_code = :ccode");
+    $dup->execute(['ccode' => $course_code]);
+    
+    if ($dup->fetch()) {
+        header("Location: mycourseadmin.php?error=" . urlencode("Course code '$course_code' already exists."));
+        exit();
+    }
 
-if ($dup->num_rows > 0) {
-    $dup->close();
-    header("Location: mycourseadmin.php?error=" . urlencode("Course code '$course_code' already exists."));
-    exit();
-}
-$dup->close();
+    /* ============================================================
+       INSERT (PDO)
+       ============================================================ */
+    $insert = $conn->prepare("
+        INSERT INTO addcourse 
+            (course_code, course_name, credit_hour, 
+             category, college, department, 
+             course_year, course_semester, course_type, prerequisite_code)
+        VALUES (:code, :name, :credit, :category, :college, :dept, :year, :sem, :type, :prereq)");
 
-/* ============================================================
-   INSERT
-   ============================================================ */
-$insert = $conn->prepare("
-    INSERT INTO addcourse 
-        (course_code, course_name, credit_hour, 
-         category, college, department, 
-         course_year, course_semester, course_type, prerequisite_code)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $insert->execute([
+        'code' => $course_code,
+        'name' => $course_name,
+        'credit' => $credit_hour,
+        'category' => $category,
+        'college' => $college,
+        'dept' => $department,
+        'year' => $course_year,
+        'sem' => $course_semester,
+        'type' => $course_type,
+        'prereq' => $prerequisite_code
+    ]);
 
-/* Type string: s s i s s s i i s s = "ssisssiiss" */
-$insert->bind_param("ssisssiiss",
-    $course_code,
-    $course_name,
-    $credit_hour,
-    $category,
-    $college,
-    $department,
-    $course_year,
-    $course_semester,
-    $course_type,
-    $prerequisite_code
-);
-
-if ($insert->execute()) {
-    $insert->close();
     header("Location: mycourseadmin.php?success=1");
     exit();
-} else {
-    $err = $insert->error;
-    $insert->close();
-    header("Location: mycourseadmin.php?error=" . urlencode($err));
+
+} catch (PDOException $e) {
+    header("Location: mycourseadmin.php?error=" . urlencode($e->getMessage()));
     exit();
 }
+?>
