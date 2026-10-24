@@ -37,6 +37,11 @@ if (session_status() === PHP_SESSION_NONE) {
                 <p class="success">✅ Account created successfully. Please login.</p>
             <?php endif; ?>
 
+            <!-- Success message after password reset -->
+            <?php if (isset($_GET['msg']) && $_GET['msg'] === 'passwordreset'): ?>
+                <p class="success">✅ Password changed successfully! Please login with your new password.</p>
+            <?php endif; ?>
+
             <form action="login.php" method="POST" id="loginForm">
 
                 <!-- Username -->
@@ -77,9 +82,9 @@ if (session_status() === PHP_SESSION_NONE) {
             <!-- Reset Password -->
             <div class="reset-row">
                <button type="button" class="btn-reset"
-        onclick="window.location.href='password_reset.php';">
-    Reset Password
-</button>
+                    onclick="window.location.href='password_reset.php';">
+                    Reset Password
+                </button>
             </div>
 
             <!-- Error messages -->
@@ -133,8 +138,3 @@ if (session_status() === PHP_SESSION_NONE) {
 
 </body>
 </html>
-<?php if (isset($_GET['msg']) && $_GET['msg'] === 'passwordreset'): ?>
-    <div class="success">
-        ✅ Password changed successfully! Please login with your new password.
-    </div>
-<?php endif; ?>
