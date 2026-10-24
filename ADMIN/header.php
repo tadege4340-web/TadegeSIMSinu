@@ -23,14 +23,16 @@ if ($welcome_name === '') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Injibara University - Admin</title>
-    <link rel="stylesheet" href="/phplab/ADMIN/adminuuhome.css">
+    <!-- FIXED: Removed /phplab/ADMIN/ so CSS loads correctly on Render -->
+    <link rel="stylesheet" href="adminuuhome.css">
 </head>
 <body>
 
     <!-- FIXED HEADER -->
     <div class="top-header">
         <div class="header-logo">
-            <img src="/phplab/ADMIN/logoinu.jpg" alt="Injibara University Logo">
+            <!-- FIXED: Removed /phplab/ADMIN/ so image loads correctly on Render -->
+            <img src="logoinu.jpg" alt="Injibara University Logo">
         </div>
         <div class="header-title">
             <h1>INJIBARA UNIVERSITY<br>STUDENT INFORMATION MANAGEMENT SYSTEM</h1>
@@ -48,8 +50,10 @@ if ($welcome_name === '') {
     <!-- SIDEBAR -->
     <div class="admin-sidebar">
 
-        <a href="home.php" class="direct-link"> DASHBOARD</a>
-         <button class="dropdown-btn">COLLEGE</button>
+        <!-- FIXED: Changed home.php to homeh.php -->
+        <a href="homeh.php" class="direct-link"> DASHBOARD</a>
+        
+        <button class="dropdown-btn">COLLEGE</button>
         <div class="dropdown-container">
            <a href="ctechnology.php">College of Engineering and Technology</a>
             <a href="cmedicine.php">College of Medicine and Health Sciences</a>
@@ -59,9 +63,8 @@ if ($welcome_name === '') {
              <a href="csocial.php">College of Social Science and Humanities</a>
             <a href="cbehavioral.php">College of Education and Behavioral Science</a>
             <a href="claw.php">School of Law</a>
-             </div>
+        </div>
        
-
         <button class="dropdown-btn"> STUDENT</button>
         <div class="dropdown-container">
             <a href="addf.php"> Add Student</a>
@@ -83,20 +86,15 @@ if ($welcome_name === '') {
 
         <button class="dropdown-btn"> COURSE</button>
         <div class="dropdown-container">
-            
-
             <a href="mycourseviewadn.php">View Courses</a>
         </div>
 
         <button class="dropdown-btn"> GRADE</button>
         <div class="dropdown-container">
-           
             <a href="mygradeview.php">View Grades</a>
             <a href="mygradechanger.php">Mygarde Changer</a>
-           
             <a href="mygradeapprove.php">Mygrade Aprove</a>
         </div>
-        
 
         <a href="logout.php" class="direct-link logout-link"> LOGOUT</a>
 
