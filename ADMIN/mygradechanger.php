@@ -16,9 +16,6 @@ if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'registr
     exit();
 }
 
-/* ============================================================
-   DEFAULT STATE
-   ============================================================ */
 $message      = "";
 $message_type = "";
 
@@ -35,7 +32,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $new_gp      = (float)($_POST['new_grade_point'] ?? 0);
     $reason      = trim($_POST['reason']      ?? '');
 
-    /* ---------- Per-field validation ---------- */
     $missing = [];
     if ($student_id  === '') $missing[] = "Student ID";
     if ($course_code === '') $missing[] = "Course Code";
@@ -46,14 +42,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!empty($missing)) {
         $fieldList = implode(", ", $missing);
-        $message = "⚠️ Please fill the following field"
-                 . (count($missing) > 1 ? "s" : "")
-                 . ": <strong>$fieldList</strong>";
+        $message = "⚠️ Please fill the following field(s): <strong>$fieldList</strong>";
         $message_type = "error";
     } else {
 
         try {
-            /* ---------- Fetch existing enrollment (PDO) ---------- */
+            /* ---------- Fetch existing enrollment ---------- */
             $fetch = $conn->prepare("
                 SELECT id, grade, grade_point, grade_status 
                 FROM student_courses 
@@ -109,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'id' => $existing['id']
                 ]);
 
-                /* ---------- Log to audit table (PDO) ---------- */
+                /* ---------- Log to audit table ---------- */
                 $audit = $conn->prepare("
                     INSERT INTO grade_audit_log 
                         (student_course_id, student_id, course_code,
