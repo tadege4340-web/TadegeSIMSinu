@@ -1,4 +1,14 @@
 <?php
+// FIX: Allow session cookies to work inside iframes (required for Render)
+session_set_cookie_params([
+    'lifetime' => 0,
+    'path' => '/',
+    'domain' => '',
+    'secure' => true,      // Must be true for SameSite=None (Render uses HTTPS)
+    'httponly' => true,
+    'samesite' => 'None'   // Critical: allows the cookie to be sent inside the iframe
+]);
+
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 require 'db.php';
 
@@ -10,14 +20,14 @@ if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['head', 'admin
 
 $hod_department = trim($_SESSION['department'] ?? '');
 
-// Get Filters (Student ID is optional)
+// 2. Get Filters (Student ID is optional)
 $student_id      = trim($_GET['student_id'] ?? '');
 $filter_year     = trim($_GET['year'] ?? '');
 $filter_semester = trim($_GET['semester'] ?? '');
 
 $students_grades = [];
 
-// Only run the query if at least one filter is selected
+// 3. Only run the query if at least one filter is selected
 if ($student_id !== '' || $filter_year !== '' || $filter_semester !== '') {
     
     // Querying student_courses directly where the grades are
@@ -66,5 +76,6 @@ if ($student_id !== '' || $filter_year !== '' || $filter_semester !== '') {
     }
 }
 
+// 4. Load the View
 include 'Headviewgradef.php';
 ?>

@@ -1,4 +1,14 @@
 <?php
+// FIX: Allow session cookies to work inside iframes (required for Render)
+session_set_cookie_params([
+    'lifetime' => 0,
+    'path' => '/',
+    'domain' => '',
+    'secure' => true,      // Must be true for SameSite=None (Render uses HTTPS)
+    'httponly' => true,
+    'samesite' => 'None'   // Critical: allows the cookie to be sent inside the iframe
+]);
+
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
 require 'db.php';
 

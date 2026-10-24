@@ -1,7 +1,20 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) { session_start(); }
+// FIX: Allow session cookies to work inside iframes (required for Render)
+session_set_cookie_params([
+    'lifetime' => 0,
+    'path' => '/',
+    'domain' => '',
+    'secure' => true,      // Must be true for SameSite=None (Render uses HTTPS)
+    'httponly' => true,
+    'samesite' => 'None'   // Critical: allows the cookie to be sent inside the iframe
+]);
+
+if (session_status() === PHP_SESSION_NONE) { 
+    session_start(); 
+}
 require 'db.php';
 
+// 1. Security Check
 if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['head', 'admin'])) {
     header("Location: loginf.php"); 
     exit();
@@ -11,26 +24,31 @@ $hod_department = trim($_SESSION['department'] ?? '');
 $hod_college    = trim($_SESSION['college'] ?? '');
 $message = '';
 
+// 2. Handle Form Submission (POST)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $course_code     = trim($_POST['course_code'] ?? '');
     $course_name     = trim($_POST['course_name'] ?? '');
-    $credit_hour     = trim($_POST['credit_hour'] ?? '');
-    $course_year     = trim($_POST['course_year'] ?? '');
-    $course_semester = trim($_POST['course_semester'] ?? '1'); 
+    $credit_hour     = (int)($_POST['credit_hour'] ?? 0);
+    $course_year     = (int)($_POST['course_year'] ?? 0);
+    $course_semester = (int)($_POST['course_semester'] ?? 0);
     
+    // Default category
     $category = "Major Course";
-    
-    if (!empty($course_code) && !empty($course_name)) {
+
+    if ($course_code === '' || $course_name === '' || $credit_hour <= 0 || $course_year <= 0 || $course_semester <= 0) {
+        $message = "<p style='color:red; font-weight:bold;'>⚠️ Please fill in all fields correctly.</p>";
+    } else {
         try {
-            // Check for duplicate first
+            // Check for duplicate course code first
             $chk = $conn->prepare("SELECT course_id FROM addcourse WHERE course_code = :ccode");
             $chk->execute(['ccode' => $course_code]);
             
             if ($chk->fetch()) {
-                $message = "<div style='color: red; margin-bottom: 15px; font-weight: bold;'>❌ Course code '$course_code' already exists.</div>";
+                $message = "<p style='color:red; font-weight:bold;'>❌ Course code '$course_code' already exists.</p>";
             } else {
-                // Insert new course (PDO)
-                $sql = "INSERT INTO addcourse (course_code, course_name, credit_hour, category, college, department, course_year, course_semester) 
+                // Insert the new course (PDO)
+                $sql = "INSERT INTO addcourse 
+                        (course_code, course_name, credit_hour, category, college, department, course_year, course_semester) 
                         VALUES (:code, :name, :credit, :category, :college, :dept, :year, :sem)";
                 
                 $stmt = $conn->prepare($sql);
@@ -44,16 +62,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'year' => $course_year,
                     'sem' => $course_semester
                 ]);
-                
-                $message = "<div style='color: green; margin-bottom: 15px; font-weight: bold;'>✅ Course added successfully!</div>";
+
+                $message = "<p style='color:green; font-weight:bold;'>✅ Course '$course_code' added successfully!</p>";
             }
         } catch (PDOException $e) {
-            $message = "<div style='color: red; margin-bottom: 15px; font-weight: bold;'>❌ Error: " . $e->getMessage() . "</div>";
+            $message = "<p style='color:red; font-weight:bold;'>❌ Database Error: " . $e->getMessage() . "</p>";
         }
-    } else {
-        $message = "<div style='color: red; margin-bottom: 15px; font-weight: bold;'>❌ Please fill in all required fields.</div>";
     }
 }
 
+// 3. Load the View
 include 'Headcourseaddf.php';
 ?>

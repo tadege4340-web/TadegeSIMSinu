@@ -1,111 +1,98 @@
-<?php
-if (session_status() === PHP_SESSION_NONE) { session_start(); }
-require 'db.php';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="Head.css">
+    <style>
+        body { background-color: #f4f6f9; padding: 20px; }
+        .filter-top { background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .assign-container { display: flex; gap: 20px; margin-top: 20px; align-items: stretch; }
+        .list-box { flex: 1; background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
+        .list-box h4 { margin-bottom: 10px; color: #17365d; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; display: flex; justify-content: space-between;}
+        .list-box select { width: 100%; height: 300px; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; outline: none; font-size: 14px; flex-grow: 1;}
+        .list-box select option { padding: 8px; border-bottom: 1px solid #f1f5f9; }
+        .btn-filter { background: #1e4e79; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; height: 42px;}
+        .alert { padding: 15px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; }
+        .alert-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+        .alert-warning { background: #fef9c3; color: #854d0e; border: 1px solid #fde047; }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <div class="page-header">
+            <div class="header-text">
+                <h2>🎓 Bulk Assign Courses to Students</h2>
+                <p>Department: <strong><?= htmlspecialchars($hod_department) ?></strong></p>
+            </div>
+        </div>
 
-// 1. Security Check
-if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['head', 'admin'])) {
-    header("Location: loginf.php"); 
-    exit();
-}
+        <?php if ($message !== ''): ?>
+            <?php $alert_class = $message_type == 'error' ? 'alert-error' : ($message_type == 'warning' ? 'alert-warning' : 'alert-success'); ?>
+            <div class="alert <?= $alert_class ?>"><?= $message ?></div>
+        <?php endif; ?>
 
-$hod_department = trim($_SESSION['department'] ?? '');
-$message = ''; 
-$message_type = 'success';
+        <!-- STEP 1: Filter by Year AND Semester -->
+        <div class="filter-top">
+            <form method="GET" action="Headcourseassignstudent.php" style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
+                <div class="filter-group" style="flex: 1; min-width: 200px;">
+                    <label style="font-weight: bold; margin-bottom: 5px; display: block;">Year</label>
+                    <select name="year" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                        <option value="">-- Choose Year --</option>
+                        <?php for ($i = 1; $i <= 7; $i++): ?>
+                            <option value="<?= $i ?>" <?= $filter_year == $i ? 'selected' : '' ?>>Year <?= $i ?></option>
+                        <?php endfor; ?>
+                    </select>
+                </div>
+                <div class="filter-group" style="flex: 1; min-width: 200px;">
+                    <label style="font-weight: bold; margin-bottom: 5px; display: block;">Semester</label>
+                    <select name="semester" required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                        <option value="">-- Choose Semester --</option>
+                        <option value="1" <?= $filter_semester == '1' ? 'selected' : '' ?>>Semester 1</option>
+                        <option value="2" <?= $filter_semester == '2' ? 'selected' : '' ?>>Semester 2</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-filter">Load Data</button>
+            </form>
+        </div>
 
-$filter_year     = $_GET['year'] ?? '';
-$filter_semester = $_GET['semester'] ?? '';
+        <?php if ($filter_year !== '' && $filter_semester !== ''): ?>
+            <form method="POST" action="Headcourseassignstudent.php">
+                <div class="assign-container">
+                    <div class="list-box">
+                        <h4>👨‍🎓 Year <?= htmlspecialchars($filter_year) ?> Students <span>(<?= count($students) ?>)</span></h4>
+                        <select multiple id="studentList" name="student_ids[]">
+                            <?php foreach ($students as $s): ?>
+                                <option value="<?= $s['student_id'] ?>" selected>
+                                    <?= htmlspecialchars($s['student_id'] . ' - ' . $s['firstname'] . ' ' . $s['father_name']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
 
-// 2. Handle Assignment (POST)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['assign'])) {
-    $student_ids = $_POST['student_ids'] ?? []; 
-    $course_ids  = $_POST['course_ids'] ?? [];
-    
-    if (!empty($student_ids) && !empty($course_ids)) {
-        $success_count = 0; 
-        $error_count = 0;
-        $ac_year = '2024/2025'; // Default academic year
-        
-        try {
-            $conn->beginTransaction();
+                    <div class="list-box">
+                        <h4>📚 Sem <?= htmlspecialchars($filter_semester) ?> Courses <span>(<?= count($courses) ?>)</span></h4>
+                        <select multiple id="courseList" name="course_ids[]">
+                            <?php foreach ($courses as $c): ?>
+                                <option value="<?= $c['course_id'] ?>">
+                                    <?= htmlspecialchars($c['course_code'] . ' - ' . $c['course_name']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
 
-            foreach ($student_ids as $s_id) {
-                foreach ($course_ids as $c_id) {
-                    
-                    // Fetch the exact course details first (PDO)
-                    $stmt_c = $conn->prepare("SELECT course_code, course_semester FROM addcourse WHERE course_id = :cid");
-                    $stmt_c->execute(['cid' => $c_id]);
-                    $course_info = $stmt_c->fetch(PDO::FETCH_ASSOC);
-                    
-                    $course_code = $course_info['course_code'] ?? '';
-                    $course_sem  = $course_info['course_semester'] ?? $filter_semester;
-
-                    // Insert using PDO's INSERT IGNORE to skip duplicates
-                    $sql = "INSERT IGNORE INTO student_courses (student_id, course_code, course_id, ac_year, semester, grade_status) 
-                            VALUES (:sid, :ccode, :cid, :ayear, :sem, 'Pending')";
-                    
-                    $stmt = $conn->prepare($sql);
-                    $stmt->execute([
-                        'sid' => $s_id,
-                        'ccode' => $course_code,
-                        'cid' => $c_id,
-                        'ayear' => $ac_year,
-                        'sem' => $course_sem
-                    ]);
-                    
-                    // If the insert was successful (1 row affected), count it
-                    if ($stmt->rowCount() > 0) { 
-                        $success_count++; 
-                    } else { 
-                        $error_count++; 
-                    }
-                }
-            }
-            
-            $conn->commit();
-            $message = "✅ Successfully assigned $success_count course(s) to students.";
-            if ($error_count > 0) { 
-                $message .= " ⚠️ $error_count skipped (already assigned)."; 
-                $message_type = 'warning'; 
-            }
-        } catch (PDOException $e) {
-            $conn->rollBack();
-            $message = "❌ Database Error: " . $e->getMessage();
-            $message_type = 'error';
-        }
-    } else {
-        $message = "❌ Please select students and courses."; 
-        $message_type = 'error';
-    }
-}
-
-// 3. Fetch Students (PDO)
-$students = [];
-if ($filter_year !== '') {
-    try {
-        $stmt = $conn->prepare("SELECT student_id, firstname, father_name FROM users2 WHERE department = :dept AND `year` = :year ORDER BY firstname ASC");
-        $stmt->execute([
-            'dept' => $hod_department,
-            'year' => $filter_year
-        ]);
-        $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } catch (PDOException $e) {}
-}
-
-// 4. Fetch Courses (PDO)
-$courses = [];
-if ($filter_year !== '' && $filter_semester !== '') {
-    try {
-        $sql_c = "SELECT course_id, course_code, course_name FROM addcourse WHERE department = :dept AND course_year = :year AND course_semester = :sem ORDER BY course_code ASC";
-        $stmt = $conn->prepare($sql_c);
-        $stmt->execute([
-            'dept' => $hod_department,
-            'year' => $filter_year,
-            'sem' => $filter_semester
-        ]);
-        $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } catch (PDOException $e) {}
-}
-
-// 5. Load the View
-include 'Headcourseassignstudentf.php';
-?>
+                <div style="text-align: center; margin-top: 25px;">
+                    <button type="submit" name="assign" class="btn-apply" style="padding: 15px 50px; font-size: 18px;">🚀 Assign Courses</button>
+                </div>
+            </form>
+        <?php else: ?>
+            <div class="empty-state">
+                <div class="es-icon">👆</div>
+                <h3>Select Year and Semester</h3>
+                <p>Choose both filters above to load students and courses.</p>
+            </div>
+        <?php endif; ?>
+    </div>
+</body>
+</html>
