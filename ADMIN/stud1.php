@@ -91,6 +91,8 @@
               <li>College of Business and Economics</li>
               <li>College of Agriculture</li>
               <li>College of Medical and Health Sciences</li>
+              <li>College of Enducational and Behavioral science</li>\
+              <li>School of Law</li>
             </ul>
           </div>
           <div class="card">
@@ -108,6 +110,14 @@
               <li>Agriculture</li>
               <li>Nursing</li>
               <li>Public Health</li>
+              <li>Biology</li>
+              <li>Physics</li>
+              <li>Sport Science</li>
+              <li>Mathmatics</li>
+             <li> Sociology</li>
+             <li>Social Antropology</li>
+             <li>Civics and Ethical Enducation</li>
+             <li>History</li>
             </ul>
           </div>
           <div class="card">
