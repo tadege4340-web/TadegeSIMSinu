@@ -24,13 +24,14 @@
           <h1>INJIBARA UNIVERSITY</h1>
           <h2>STUDENT INFORMATION MANAGEMENT SYSTEM</h2>
         </div>
-        <!-- Added LOGIN button back so it matches a.php -->
-        <a href="login.php" class="login-btn-header">LOGIN</a>
+        <!-- FIXED: Changed from login.php to loginf.php -->
+        <a href="loginf.php" class="login-btn-header">LOGIN</a>
       </header>
 
       <!-- Navigation -->
       <nav class="nav-strip" aria-label="Main navigation">
-        <a href="a.php">HOME</a>
+        <!-- FIXED: Changed from a.php to stud1.php -->
+        <a href="stud1.php">HOME</a>
         <a href="Bb.php">CONTACT US</a>
         <a href="Cc.php">NEWS</a>
       </nav>
@@ -148,7 +149,6 @@
           <b>ID number</b> and your <b>Grandfather name</b> as your username and initial
           password respectively.</p>
 
-        <!-- ✅ THIS IS THE CRITICAL FIX: The table MUST be wrapped in table-responsive -->
         <div class="table-responsive">
           <table class="login-table">
             <thead>
@@ -234,7 +234,8 @@
         <div class="footer-col">
           <h3>Quick Links</h3>
           <ul class="footer-links">
-            <li><a href="a.php">Home</a></li>
+            <!-- FIXED: Changed from a.php to stud1.php -->
+            <li><a href="stud1.php">Home</a></li>
             <li><a href="Bb.php">Contact Us</a></li>
             <li><a href="Cc.php">News &amp; Events</a></li>
             <li><a href="loginf.php">Student Login</a></li>
