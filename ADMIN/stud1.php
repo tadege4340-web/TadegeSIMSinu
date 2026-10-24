@@ -91,7 +91,7 @@
               <li>College of Business and Economics</li>
               <li>College of Agriculture</li>
               <li>College of Medical and Health Sciences</li>
-              <li>College of Enducational and Behavioral science</li>\
+              <li>College of Enducational and Behavioral science</li>
               <li>School of Law</li>
             </ul>
           </div>
