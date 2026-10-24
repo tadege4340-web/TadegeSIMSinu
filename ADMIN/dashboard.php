@@ -1,22 +1,28 @@
 <?php
 // Student Dashboard — quick overview
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require 'db.php';
 
 $student_id = $_SESSION['student_id'] ?? '';
+$student = [];
+$course_count = 0;
 
-// Example: get the student's info
-$stmt = $conn->prepare("SELECT firstname, father_name, college, department, `year` FROM users2 WHERE student_id = ? LIMIT 1");
-$stmt->bind_param("s", $student_id);
-$stmt->execute();
-$student = $stmt->get_result()->fetch_assoc();
-$stmt->close();
+try {
+    // Get the student's info (PDO)
+    $stmt = $conn->prepare("SELECT firstname, father_name, college, department, `year` FROM users2 WHERE student_id = :sid LIMIT 1");
+    $stmt->execute(['sid' => $student_id]);
+    $student = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// Count assigned courses
-$stmt = $conn->prepare("SELECT COUNT(*) AS c FROM student_courses WHERE student_id = ?");
-$stmt->bind_param("s", $student_id);
-$stmt->execute();
-$course_count = $stmt->get_result()->fetch_assoc()['c'] ?? 0;
-$stmt->close();
+    // Count assigned courses (PDO)
+    $stmt = $conn->prepare("SELECT COUNT(*) AS c FROM student_courses WHERE student_id = :sid");
+    $stmt->execute(['sid' => $student_id]);
+    $course_count = (int)$stmt->fetchColumn();
+
+} catch (PDOException $e) {
+    // Handle error silently
+}
 ?>
 
 <h2 style="color:#2c3e50;">📊 Dashboard</h2>
