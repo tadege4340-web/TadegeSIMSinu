@@ -2,13 +2,17 @@
 <?php require 'db.php'; ?>
 
 <?php
-/* ============ SAFE COUNT HELPER ============ */
+/* ============ SAFE COUNT HELPER (Converted to PDO) ============ */
 function getCount($conn, $table, $where = '') {
     $sql = "SELECT COUNT(*) AS c FROM `$table`" . ($where ? " WHERE $where" : "");
-    $result = @mysqli_query($conn, $sql);
-    if (!$result) return 0;
-    $row = mysqli_fetch_assoc($result);
-    return (int)($row['c'] ?? 0);
+    try {
+        $stmt = $conn->prepare($sql);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return (int)($row['c'] ?? 0);
+    } catch (PDOException $e) {
+        return 0; // Return 0 if table doesn't exist or query fails
+    }
 }
 
 /* ============ LIVE COUNTS ============ */
@@ -19,15 +23,19 @@ $assigned = getCount($conn, 'student_courses');
 $colleges = getCount($conn, 'college');
 $departments = getCount($conn, 'departments');
 
-/* ============ RECENT STUDENTS ============ */
+/* ============ RECENT STUDENTS (Converted to PDO) ============ */
 $recent_students = [];
-$res = @mysqli_query($conn, 
-    "SELECT student_id, firstname, father_name, college, department, `year`
-     FROM users2
-     ORDER BY id DESC
-     LIMIT 5");
-if ($res) {
-    while ($row = mysqli_fetch_assoc($res)) $recent_students[] = $row;
+try {
+    $stmt = $conn->prepare(
+        "SELECT student_id, firstname, father_name, college, department, `year`
+         FROM users2
+         ORDER BY id DESC
+         LIMIT 5"
+    );
+    $stmt->execute();
+    $recent_students = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    // If table doesn't exist, $recent_students stays empty
 }
 
 /* ============ COLLEGE NAME LOOKUP ============ */
@@ -41,6 +49,9 @@ $college_names = [
     'behavioral' => 'Education',
     'law'        => 'Law',
 ];
+
+/* ============ FALLBACK FOR WELCOME NAME ============ */
+$welcome_name = $welcome_name ?? ($_SESSION['full_name'] ?? 'Admin');
 ?>
 
 <!-- ============================================================
