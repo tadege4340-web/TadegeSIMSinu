@@ -1,6 +1,9 @@
 <?php
-session_start();
-require 'db.php'; // Good practice to require this in case you need it later
+// Safely start session ONLY if it hasn't been started yet
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require 'db.php'; 
 
 // Security Check: Only allow teachers
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'teacher') {
@@ -23,7 +26,6 @@ $display_name = $_SESSION['full_name'] ?? 'Teacher';
 
     <header class="teacher-header">
         <div class="header-logo">
-            <!-- FIXED: Removed /phplab/ADMIN/ -->
             <img src="logoinu.jpg" alt="Injibara University Logo">
         </div>
         <div class="header-title">
