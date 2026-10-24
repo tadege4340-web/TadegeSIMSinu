@@ -25,7 +25,7 @@
           <h2>STUDENT INFORMATION MANAGEMENT SYSTEM</h2>
         </div>
         <!-- Added LOGIN button back so it matches a.php -->
-        <a href="loginf.php" class="login-btn-header">LOGIN</a>
+        <a href="login.php" class="login-btn-header">LOGIN</a>
       </header>
 
       <!-- Navigation -->
