@@ -9,23 +9,24 @@ $college_code = 'law';
 $college_name = 'School of Law';
 $college_desc = 'Educating ethical legal professionals dedicated to justice, the rule of law, and the protection of human rights in Ethiopia and beyond.';
 
-/* ============ SAFE COUNT HELPER ============ */
+/* ============ SAFE COUNT HELPER (PDO) ============ */
 function getCount($conn, $table, $college, $dept = null) {
-    $sql = "SELECT COUNT(*) AS c FROM `$table` WHERE college = ?";
-    $params = [$college];
-    $types = 's';
-    if ($dept !== null) {
-        $sql .= " AND department = ?";
-        $params[] = $dept;
-        $types .= 's';
+    try {
+        $sql = "SELECT COUNT(*) AS c FROM `$table` WHERE college = :college";
+        $params = ['college' => $college];
+        
+        if ($dept !== null) {
+            $sql .= " AND department = :dept";
+            $params['dept'] = $dept;
+        }
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->execute($params);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return (int)($row['c'] ?? 0);
+    } catch (PDOException $e) {
+        return 0;
     }
-    $stmt = $conn->prepare($sql);
-    if (!$stmt) return 0;
-    $stmt->bind_param($types, ...$params);
-    $stmt->execute();
-    $row = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
-    return $row['c'] ?? 0;
 }
 
 /* ============ TOTALS ============ */
@@ -33,12 +34,15 @@ $students = getCount($conn, 'users2',   $college_code);
 $teachers = getCount($conn, 'teachers', $college_code);
 $courses  = getCount($conn, 'addcourse',$college_code);
 
-/* ============ DEPARTMENTS ============ */
-$stmt = $conn->prepare("SELECT * FROM departments WHERE college_code = ? ORDER BY name");
-$stmt->bind_param("s", $college_code);
-$stmt->execute();
-$departments = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-$stmt->close();
+/* ============ DEPARTMENTS (PDO) ============ */
+$departments = [];
+try {
+    $stmt = $conn->prepare("SELECT * FROM departments WHERE college_code = :cc ORDER BY name");
+    $stmt->execute(['cc' => $college_code]);
+    $departments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    // Keep array empty if error
+}
 ?>
 
 <div class="theme-law">
