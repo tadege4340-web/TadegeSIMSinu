@@ -4,9 +4,9 @@ session_set_cookie_params([
     'lifetime' => 0,
     'path' => '/',
     'domain' => '',
-    'secure' => true,      // Must be true for SameSite=None (Render uses HTTPS)
+    'secure' => true,      
     'httponly' => true,
-    'samesite' => 'None'   // Critical: allows the cookie to be sent inside the iframe
+    'samesite' => 'None'   
 ]);
 
 if (session_status() === PHP_SESSION_NONE) { 
@@ -21,7 +21,6 @@ if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['head', 'admin
 }
 
 $hod_department = trim($_SESSION['department'] ?? '');
-$hod_college    = trim($_SESSION['college'] ?? '');
 $message = '';
 $message_type = '';
 
@@ -33,7 +32,14 @@ $filter_semester = $_GET['semester'] ?? '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['assign'])) {
     $teacher_ids = $_POST['teacher_ids'] ?? [];
     $course_ids  = $_POST['course_ids'] ?? [];
-    $ac_year     = '2024/2025'; // Set to your active academic year
+    $ac_year     = '2024/2025'; 
+
+    // 🔥 FIX: Ensure semester is a valid integer
+    // If the semester is empty, default to 1 to prevent the database error
+    $sem_to_use = (int)$filter_semester;
+    if ($sem_to_use <= 0) {
+        $sem_to_use = 1; 
+    }
 
     if (empty($teacher_ids) || empty($course_ids)) {
         $message = "⚠️ Please select at least one teacher and one course.";
@@ -46,19 +52,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['assign'])) {
 
             foreach ($teacher_ids as $t_id) {
                 foreach ($course_ids as $c_id) {
-                    // Get course details for the mapping
-                    $c_stmt = $conn->prepare("SELECT course_code FROM addcourse WHERE course_id = :cid");
+                    
+                    // Get course details
+                    $c_stmt = $conn->prepare("SELECT course_code, course_semester FROM addcourse WHERE course_id = :cid");
                     $c_stmt->execute(['cid' => $c_id]);
                     $course = $c_stmt->fetch(PDO::FETCH_ASSOC);
                     
                     if ($course) {
-                        // Check if already assigned to avoid duplicates
+                        // Use the course's semester if available, otherwise use the filter's semester
+                        $course_sem = (int)$course['course_semester'];
+                        if ($course_sem <= 0) {
+                            $course_sem = $sem_to_use;
+                        }
+
+                        // Check if already assigned
                         $chk = $conn->prepare("SELECT id FROM teacher_courses WHERE teacher_id = :tid AND course_id = :cid AND ac_year = :year AND semester = :sem");
                         $chk->execute([
                             'tid' => $t_id, 
                             'cid' => $c_id, 
                             'year' => $ac_year, 
-                            'sem' => $filter_semester
+                            'sem' => $course_sem // Use the validated integer
                         ]);
 
                         if (!$chk->fetch()) {
@@ -71,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['assign'])) {
                                 'ccode' => $course['course_code'],
                                 'cid' => $c_id,
                                 'year' => $ac_year,
-                                'sem' => $filter_semester
+                                'sem' => $course_sem // Use the validated integer
                             ]);
                             $assigned_count++;
                         } else {
@@ -96,18 +109,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['assign'])) {
     }
 }
 
-// 4. Fetch Teachers and Courses for the selected Year/Semester (PDO)
+// 4. Fetch Teachers and Courses
 $teachers = [];
 $courses = [];
 
 if ($filter_year !== '' && $filter_semester !== '') {
     try {
-        // Fetch teachers in this department
         $stmt = $conn->prepare("SELECT user_id, full_name FROM teachers WHERE department = :dept ORDER BY full_name ASC");
         $stmt->execute(['dept' => $hod_department]);
         $teachers = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Fetch courses for this year/semester in this department
         $stmt = $conn->prepare("
             SELECT course_id, course_code, course_name 
             FROM addcourse 
