@@ -72,7 +72,7 @@ try {
 <body>
 
     <div class="welcome-box">
-        <h2>Welcome back, <?= htmlspecialchars($teacher_name) ?>!</h2>
+        <h2>Welcome , <?= htmlspecialchars($teacher_name) ?>!</h2>
         <p>Here is a quick overview of your assigned classes and students.</p>
     </div>
 

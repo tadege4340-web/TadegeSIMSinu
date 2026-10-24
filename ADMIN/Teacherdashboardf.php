@@ -86,10 +86,8 @@ $display_name = $_SESSION['full_name'] ?? 'Teacher';
                 <span class="portal-status"></span>
             </div>
 
-            <iframe id="teacherContent" name="teacherContent" title="Teacher dashboard content" 
-                srcdoc="<div style='font-family:Arial, sans-serif; padding: 40px; text-align: center; color: #17365d;'><h2>Welcome to Your Dashboard</h2><p style='color: #64748b;'>Select an option from the left menu to get started.</p></div>" 
-                loading="eager">
-            </iframe>
+            <!-- FIXED: Changed srcdoc to src="teacherhome.php" -->
+            <iframe id="teacherContent" name="teacherContent" src="teacherhome.php" title="Teacher dashboard content" loading="eager"></iframe>
         </main>
     </div>
 
