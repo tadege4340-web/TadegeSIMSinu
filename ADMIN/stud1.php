@@ -211,9 +211,16 @@
 
       <!-- ===== IMAGE GALLERY ===== -->
       <div class="gallery-row">
-        <img src="image2.jpg" alt="Campus" loading="lazy">
-        <img src="image.jpeg" alt="Students" loading="lazy">
-        <img src="image3.jpeg" alt="Library" loading="lazy">
+        <img src="inu.jpg" alt="Campus" loading="lazy">
+        <img src="inu2.jpg" alt="Students" loading="lazy">
+        <img src="inu3.jpg" alt="Library" loading="lazy">
+        <img src="inu4.jpg" alt="Library" loading="lazy">
+        <img src="inu5.jpg" alt="Library" loading="lazy">
+        <img src="inu6.jpg" alt="Library" loading="lazy">
+        <img src="inu7.jpg" alt="Library" loading="lazy">
+        <img src="inu8.jpg" alt="Library" loading="lazy">
+        <img src="inu9.jpg" alt="Library" loading="lazy">
+
       </div>
     </main>
 
