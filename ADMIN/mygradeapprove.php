@@ -1,6 +1,6 @@
 <?php
 /* ============================================================
-   MY GRADE APPROVE — REGISTRAR APPROVAL PAGE (PDO Version)
+   MY GRADE APPROVE — REGISTRAR APPROVAL PAGE (LOGIC)
    ============================================================ */
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -8,19 +8,21 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 require 'db.php';
 
+// Security Check
+if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'registrar'])) {
+    header("Location: loginf.php");
+    exit();
+}
+
 $message      = "";
 $message_type = "";
 
-/* ============================================================
-   FILTERS
-   ============================================================ */
+// FILTERS
 $f_college    = trim($_GET['college']    ?? '');
 $f_department = trim($_GET['department'] ?? '');
 $f_year       = (int)($_GET['year']      ?? 0);
 
-/* ============================================================
-   HANDLE POST — APPROVE / REJECT
-   ============================================================ */
+// HANDLE POST — APPROVE / REJECT
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
     $action      = $_POST['action'];
@@ -30,17 +32,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $registrar   = $_SESSION['username'] ?? $_SESSION['full_name'] ?? 'registrar';
     $reason      = trim($_POST['reason'] ?? '');
 
-    /* ============================================================
-       ACTION 1: APPROVE ALL (PDO)
-       ============================================================ */
     if ($action === 'approve') {
-
         if ($course_code === '' || $ac_year === '' || $semester === 0) {
             $message = "⚠️ Missing parameters.";
             $message_type = "error";
         } else {
             try {
-                // Update only Pending grades
                 $upd = $conn->prepare("
                     UPDATE student_courses 
                     SET grade_status = 'Approved',
@@ -49,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     WHERE course_code = :ccode 
                       AND ac_year = :ayear 
                       AND semester = :sem
-                      AND grade_status = 'Pending'");
+                      AND grade_status = 'Submitted'");
                 $upd->execute([
                     'registrar' => $registrar,
                     'ccode' => $course_code,
@@ -59,7 +56,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 
                 $count = $upd->rowCount();
 
-                // Log the approval
                 $audit = $conn->prepare("
                     INSERT INTO grade_audit_log 
                         (student_id, course_code, ac_year, semester,
@@ -84,13 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $message_type = "error";
             }
         }
-    }
-
-    /* ============================================================
-       ACTION 2: REJECT / RETURN TO TEACHER (PDO)
-       ============================================================ */
-    elseif ($action === 'reject') {
-
+    } elseif ($action === 'reject') {
         if ($course_code === '' || $ac_year === '' || $semester === 0) {
             $message = "⚠️ Missing parameters.";
             $message_type = "error";
@@ -108,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     WHERE course_code = :ccode 
                       AND ac_year = :ayear 
                       AND semester = :sem
-                      AND grade_status = 'Pending'");
+                      AND grade_status = 'Submitted'");
                 $upd->execute([
                     'reason' => $reason,
                     'ccode' => $course_code,
@@ -143,18 +133,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 }
 
-/* ============================================================
-   LOAD COLLEGES (FOR FILTER) - PDO
-   ============================================================ */
+// LOAD COLLEGES
 $colleges = [];
 try {
     $r = $conn->query("SELECT code, name FROM college ORDER BY name");
     $colleges = $r->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {}
 
-/* ============================================================
-   LOAD DEPARTMENTS (FOR SELECTED COLLEGE) - PDO
-   ============================================================ */
+// LOAD DEPARTMENTS
 $departments = [];
 if ($f_college !== '') {
     try {
@@ -166,11 +152,8 @@ if ($f_college !== '') {
     } catch (PDOException $e) {}
 }
 
-/* ============================================================
-   FETCH SUBMITTED GROUPS (WAITING FOR APPROVAL) - PDO
-   ============================================================ */
+// FETCH SUBMITTED GROUPS
 $submittedGroups = [];
-
 try {
     $sql = "
         SELECT 
@@ -188,7 +171,7 @@ try {
             SUM(CASE WHEN sc.grade IS NOT NULL THEN 1 ELSE 0 END) AS graded
         FROM student_courses sc
         LEFT JOIN addcourse a ON a.course_code = sc.course_code
-        WHERE sc.grade_status = 'Pending'";
+        WHERE sc.grade_status = 'Submitted'";
 
     $params = [];
 
@@ -217,9 +200,7 @@ try {
     $message = "Error loading grades: " . $e->getMessage();
 }
 
-/* ============================================================
-   LOAD HEADER + VIEW + FOOTER
-   ============================================================ */
+// LOAD HEADER + VIEW + FOOTER
 include 'header.php';
 include 'mygradeapprovef.php';
 include 'footer.php';
