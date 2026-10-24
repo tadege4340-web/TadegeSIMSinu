@@ -1,55 +1,51 @@
-<?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-require 'db.php';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="Head.css">
+    <style> body { background-color: #f4f6f9; padding: 20px; } </style>
+</head>
+<body>
+    <div class="page-container">
+        
+        <!-- WELCOME CARD -->
+        <div class="welcome-card" style="background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+            <h2>Welcome, Head of <?= htmlspecialchars($hod_department ?: 'Department') ?>!</h2>
+            <p>Here is an overview of your department. You can manage students, teachers, courses, and grades from the sidebar menu.</p>
+        </div>
 
-// 1. Security Check
-if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['head', 'admin'])) {
-    header("Location: loginf.php");
-    exit();
-}
+        <!-- STATS GRID -->
+        <div class="dash-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+            
+            <div class="stat-card card-blue" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid #3b82f6;">
+                <div class="stat-info">
+                    <h3 style="font-size: 28px; color: #1e3a5f; margin: 0;"><?= number_format($stats['students']) ?></h3>
+                    <p style="color: #64748b; margin-top: 5px;">Total Students</p>
+                </div>
+            </div>
+            
+            <div class="stat-card card-green" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid #10b981;">
+                <div class="stat-info">
+                    <h3 style="font-size: 28px; color: #1e3a5f; margin: 0;"><?= number_format($stats['teachers']) ?></h3>
+                    <p style="color: #64748b; margin-top: 5px;">Total Teachers</p>
+                </div>
+            </div>
+            
+            <div class="stat-card card-purple" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid #8b5cf6;">
+                <div class="stat-info">
+                    <h3 style="font-size: 28px; color: #1e3a5f; margin: 0;"><?= number_format($stats['courses']) ?></h3>
+                    <p style="color: #64748b; margin-top: 5px;">Total Courses</p>
+                </div>
+            </div>
+            
+            <div class="stat-card card-orange" style="background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid #f59e0b;">
+                <div class="stat-info">
+                    <h3 style="font-size: 28px; color: #1e3a5f; margin: 0;"><?= number_format($stats['pending_grades']) ?></h3>
+                    <p style="color: #64748b; margin-top: 5px;">Pending Grades</p>
+                </div>
+            </div>
+        </div>
 
-$hod_department = trim($_SESSION['department'] ?? '');
-$hod_college    = trim($_SESSION['college'] ?? '');
-
-// 2. Fetch Stats (PDO)
-$stats = [
-    'students' => 0,
-    'teachers' => 0,
-    'courses'  => 0,
-    'pending_grades' => 0
-];
-
-try {
-    // Total Students in department
-    $stmt = $conn->prepare("SELECT COUNT(*) FROM users2 WHERE department = :dept");
-    $stmt->execute(['dept' => $hod_department]);
-    $stats['students'] = (int)$stmt->fetchColumn();
-
-    // Total Teachers in department
-    $stmt = $conn->prepare("SELECT COUNT(*) FROM teachers WHERE department = :dept");
-    $stmt->execute(['dept' => $hod_department]);
-    $stats['teachers'] = (int)$stmt->fetchColumn();
-
-    // Total Courses in department
-    $stmt = $conn->prepare("SELECT COUNT(*) FROM addcourse WHERE department = :dept");
-    $stmt->execute(['dept' => $hod_department]);
-    $stats['courses'] = (int)$stmt->fetchColumn();
-
-    // Pending Grades in department
-    $stmt = $conn->prepare("
-        SELECT COUNT(sc.id) 
-        FROM student_courses sc
-        JOIN addcourse c ON sc.course_code = c.course_code
-        WHERE sc.grade_status = 'Pending' AND c.department = :dept");
-    $stmt->execute(['dept' => $hod_department]);
-    $stats['pending_grades'] = (int)$stmt->fetchColumn();
-
-} catch (PDOException $e) {
-    // If there's an error, stats will just stay at 0
-}
-
-// 3. Load the View
-include 'Headdashboardf.php';
-?>
+    </div>
+</body>
+</html>
